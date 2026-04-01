@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#1B1B1B"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Simartketing</title>
+<style>
+/* ── RESET ──────────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#F8F9FA;color:#1B1B1B;overflow-x:hidden}
+:root{--or:#FF6D2A;--dk:#1B1B1B}
+button{cursor:pointer;border:none;font-family:inherit;-webkit-appearance:none;appearance:none}
+input,textarea,select{font-family:inherit;-webkit-appearance:none;appearance:none;font-size:16px}/* 16px prevents iOS zoom */
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--or)!important;box-shadow:0 0 0 3px rgba(255,109,42,.15)!important}
+
+/* ── APP SHELL ──────────────────────────────────────────────────────── */
+#app{display:flex;height:100vh;height:100dvh;overflow:hidden}
+
+/* ── SIDEBAR — desktop always visible ──────────────────────────────── */
+#sb{width:270px;flex-shrink:0;background:#1B1B1B;display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;z-index:10}
+#sb::after{content:'';position:absolute;top:-50px;right:-50px;width:140px;height:140px;background:var(--or);opacity:.04;border-radius:50%;filter:blur(30px);pointer-events:none}
+.sb-top{padding:28px 24px 20px;border-bottom:1px solid rgba(255,255,255,.07);text-align:center}
+.logo{font-size:21px;font-weight:900;color:#fff}.logo span{color:var(--or)}
+.logo-sub{font-size:9px;color:#555;letter-spacing:.2em;text-transform:uppercase;margin-top:5px}
+#nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:3px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.nb{display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:11px;background:transparent;color:#888;font-size:13px;font-weight:500;text-align:left;width:100%;min-height:44px;position:relative;transition:background .15s,color .15s}
+.nb:hover,.nb:active{background:rgba(255,255,255,.06);color:#fff}
+.nb.on{background:rgba(255,109,42,.1);color:#fff;border:1px solid rgba(255,109,42,.2)}
+.nb.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--or);border-radius:0 3px 3px 0;box-shadow:0 0 10px rgba(255,109,42,.7)}
+.nb-ic{font-size:16px;min-width:20px;text-align:center}
+#sb-foot{padding:14px;border-top:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:8px;padding-bottom:max(14px,env(safe-area-inset-bottom,14px))}
+.btn-lg{width:100%;padding:13px;border-radius:11px;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;transition:all .2s}
+.btn-login{background:linear-gradient(135deg,var(--or),#FF7600);color:#fff;box-shadow:0 4px 15px rgba(255,109,42,.25)}
+.btn-login:active{transform:scale(.98)}
+.btn-logout{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:12px;padding:10px}
+.btn-cfg{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#888;font-size:11px;padding:10px}
+.btn-cfg:hover,.btn-cfg:active{color:#fff;background:rgba(255,255,255,.1)}
+.u-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:11px;padding:10px 12px;display:flex;align-items:center;gap:10px;overflow:hidden}
+.u-av{width:34px;height:34px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0;overflow:hidden}
+.u-av img{width:100%;height:100%;object-fit:cover}
+.u-nm{font-size:13px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.u-em{font-size:11px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-pw{font-size:9px;color:#333;text-transform:uppercase;letter-spacing:.2em;font-weight:700;text-align:center}
+
+/* ── MOBILE DRAWER OVERLAY ──────────────────────────────────────────── */
+#sb-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:199;backdrop-filter:blur(2px);opacity:0;transition:opacity .25s}
+#sb-ov.open{display:block;opacity:1}
+
+/* ── MOBILE TOPBAR ──────────────────────────────────────────────────── */
+#topbar{display:none;position:fixed;top:0;left:0;right:0;z-index:150;background:#1B1B1B;border-bottom:1px solid rgba(255,109,42,.2);align-items:center;justify-content:space-between;padding:0 14px;height:56px;padding-top:env(safe-area-inset-top,0)}
+.tb-logo{font-size:18px;font-weight:900;color:#fff}.tb-logo span{color:var(--or)}
+.tb-btn{width:40px;height:40px;background:rgba(255,255,255,.08);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--or);border:1px solid rgba(255,109,42,.2);font-size:18px;flex-shrink:0}
+.tb-btn:active{background:rgba(255,255,255,.15)}
+
+/* ── MAIN CONTENT ───────────────────────────────────────────────────── */
+#main{flex:1;min-width:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#F8F9FA}
+.pg{max-width:1080px;margin:0 auto;padding:28px}
+
+/* ── CARDS ──────────────────────────────────────────────────────────── */
+.mc{background:#fff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.mh{background:linear-gradient(135deg,#1B1B1B,#2a2a2a);padding:20px 22px;color:#fff}
+.mh h2{font-size:18px;font-weight:800;display:flex;align-items:center;gap:9px}
+.mh p{font-size:12px;color:rgba(165,165,165,.85);margin-top:4px}
+.mb{padding:22px}
+
+/* ── FORMS ──────────────────────────────────────────────────────────── */
+.fl{display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:5px}
+.fi{width:100%;border:1.5px solid #E5E7EB;border-radius:9px;padding:11px 13px;font-size:16px;color:#1B1B1B;background:#fff;transition:border .2s}
+.fi:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,109,42,.12)}
+textarea.fi{resize:vertical;min-height:80px;line-height:1.55;font-size:14px}
+select.fi{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 11px center;padding-right:32px;cursor:pointer}
+.rel{position:relative}
+.vb{position:absolute;z-index:5;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .2s}
+.vb.ta{bottom:7px;right:7px}.vb.ip{top:50%;right:9px;transform:translateY(-50%)}
+.vb.off{background:#F3F4F6;color:#9CA3AF;border:none}.vb.off:hover,.vb.off:active{background:#FFF0E8;color:var(--or)}
+.vb.on{background:#EF4444;color:#fff;border:none;animation:vbp 1.5s ease-in-out infinite}
+@keyframes vbp{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 6px rgba(239,68,68,0)}}
+
+/* ── RESPONSIVE GRIDS ───────────────────────────────────────────────── */
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:16px}
+
+/* ── BUTTONS ────────────────────────────────────────────────────────── */
+.bp{background:var(--or);color:#fff;padding:10px 18px;border-radius:9px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;min-height:44px;transition:all .2s}
+.bp:hover,.bp:active{background:#e05510}.bp:disabled{background:#ccc;cursor:not-allowed}
+.bd{background:#1B1B1B;color:#fff;padding:10px 18px;border-radius:9px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px;min-height:44px;transition:all .2s}.bd:hover,.bd:active{background:#2a2a2a}
+.bs{background:#F3F4F6;color:#374151;padding:10px 18px;border-radius:9px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;min-height:44px;transition:all .2s}.bs:hover,.bs:active{background:#E5E7EB}
+.badge-ai{background:#FFF0E8;color:var(--or);font-size:10px;font-weight:800;text-transform:uppercase;padding:3px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:4px}
+.badge-m{background:#EFF6FF;color:#3B82F6;font-size:10px;font-weight:800;text-transform:uppercase;padding:3px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:4px}
+
+/* ── MODALS (bottom-sheet) ──────────────────────────────────────────── */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
+.mbox{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.3);animation:msl .22s ease;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@keyframes msl{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhd{background:#1B1B1B;padding:28px 24px 22px;text-align:center;position:relative;overflow:hidden}
+.mhd::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:var(--or);border-radius:50%;filter:blur(30px);opacity:.2}
+.ml{font-size:20px;font-weight:900;color:#fff;position:relative;z-index:1}.ml span{color:var(--or)}
+.mx{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);width:32px;height:32px;border-radius:50%;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.mx:hover,.mx:active{background:rgba(255,255,255,.2);color:#fff}
+.mbd{padding:22px 24px 36px}
+.mt2{font-size:19px;font-weight:800;color:#1B1B1B;text-align:center;margin-bottom:5px}
+.ms2{font-size:13px;color:#6B7280;text-align:center;margin-bottom:20px}
+.btn-gg{width:100%;background:#fff;border:1.5px solid #E5E7EB;color:#1B1B1B;padding:14px;border-radius:11px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:9px;min-height:50px;transition:all .2s}
+.btn-gg:hover,.btn-gg:active{background:#f5f5f5;border-color:#ccc}
+.dv{display:flex;align-items:center;gap:10px;margin:14px 0}.dv-l{flex:1;height:1px;background:#E5E7EB}.dv span{font-size:12px;color:#9CA3AF}
+.btn-em{width:100%;background:#1B1B1B;color:#fff;padding:14px;border-radius:11px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;transition:all .2s}.btn-em:hover,.btn-em:active{background:#2a2a2a}
+.err{background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;padding:10px 14px;border-radius:9px;font-size:12px;margin-top:10px;line-height:1.5}
+.ok-m{background:#F0FDF4;border:1px solid #BBF7D0;color:#15803D;padding:10px 14px;border-radius:9px;font-size:13px;margin-top:10px;line-height:1.5}
+.bk{font-size:13px;color:#9CA3AF;background:none;border:none;cursor:pointer;padding:0 0 16px;display:flex;align-items:center;gap:5px;min-height:36px}
+.bk:hover,.bk:active{color:var(--or)}
+.sw{background:none;border:none;font-size:12px;color:#6B7280;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:8px 0;display:inline-block}
+.sw:hover,.sw:active{color:#1B1B1B}
+.btn-sb{width:100%;background:var(--or);color:#fff;padding:14px;border-radius:11px;font-size:15px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;box-shadow:0 4px 15px rgba(255,109,42,.25);min-height:52px;transition:all .2s}
+.btn-sb:hover,.btn-sb:active{background:#e05510}.btn-sb:disabled{background:#ccc;cursor:not-allowed;box-shadow:none}
+.info-b{background:#FFF7ED;border:1px solid #FECFB0;border-radius:9px;padding:10px 13px;font-size:11px;color:#7C2D12;line-height:1.55}
+
+/* ── DASHBOARD ──────────────────────────────────────────────────────── */
+.hero{background:linear-gradient(160deg,#1b1b1b,#111);padding:56px 28px 48px;text-align:center;position:relative;overflow:hidden;border-radius:20px 20px 0 0}
+.hero::before{content:'';position:absolute;top:-80px;left:-80px;width:280px;height:280px;background:var(--or);border-radius:50%;filter:blur(80px);opacity:.2;animation:gw 8s ease-in-out infinite}
+@keyframes gw{0%,100%{transform:scale(1);opacity:.2}50%{transform:scale(1.08);opacity:.3}}
+.h-logo{font-size:40px;font-weight:900;color:#fff;letter-spacing:-1px;position:relative;z-index:1}.h-logo span{color:var(--or)}
+.h-div{width:52px;height:4px;background:var(--or);border-radius:99px;margin:16px auto;box-shadow:0 0 14px rgba(255,109,42,.6);position:relative;z-index:1}
+.h-tag{font-size:16px;font-weight:300;color:#E5E7EB;max-width:440px;margin:0 auto 10px;line-height:1.6;position:relative;z-index:1}
+.h-tag b{color:var(--or);font-weight:700}
+.h-sub{font-size:13px;color:#888;max-width:400px;margin:0 auto 26px;line-height:1.7;font-weight:300;position:relative;z-index:1}
+.h-btn{display:inline-flex;align-items:center;gap:9px;background:rgba(27,27,27,.8);border:1.5px solid rgba(255,109,42,.4);color:#fff;padding:12px 24px;border-radius:99px;font-size:14px;font-weight:800;min-height:48px;position:relative;z-index:1;transition:all .3s}
+.h-btn:hover,.h-btn:active{border-color:var(--or);box-shadow:0 0 28px rgba(255,109,42,.25)}
+.h-wlc{display:inline-block;background:#1B1B1B;color:#fff;padding:12px 24px;border-radius:99px;font-size:15px;font-weight:800;border:1px solid rgba(165,165,165,.2);position:relative;z-index:1}
+.h-wlc span{color:var(--or)}
+.db-body{background:#fff;border-radius:0 0 20px 20px;padding:24px}
+.dc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px;margin-bottom:22px}
+.dci{border:1px solid #F3F4F6;border-radius:16px;padding:20px;transition:transform .2s,box-shadow .2s;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.dci:hover,.dci:active{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.dc-ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px}
+.dci h3{font-size:16px;font-weight:800;color:#1B1B1B;margin-bottom:7px}
+.dci p{font-size:13px;color:#6B7280;line-height:1.65;font-weight:300}.dci p b{color:var(--or);font-weight:700}
+.df{background:#1B1B1B;border-radius:16px;padding:28px 22px;text-align:center;position:relative;overflow:hidden;margin-bottom:22px}
+.df::before{content:'';position:absolute;right:-40px;top:-40px;width:130px;height:130px;background:var(--or);border-radius:50%;filter:blur(60px);opacity:.1}
+.df h3{font-size:22px;font-weight:900;color:#fff;margin-bottom:12px;position:relative;z-index:1}.df h3 span{color:var(--or)}
+.df p{font-size:13px;color:#888;max-width:440px;margin:0 auto;line-height:1.65;font-weight:300;position:relative;z-index:1}.df p b{color:#fff;font-weight:700}
+.dcta{text-align:center;padding:8px 0 4px}.dcta h4{font-size:18px;font-weight:900;color:#1B1B1B;margin-bottom:8px}
+.dcta p{font-size:14px;color:#888;font-weight:500}.dcta p span{color:var(--or)}
+
+/* ── LOADER ─────────────────────────────────────────────────────────── */
+#ldr{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:2000;display:none;align-items:center;justify-content:center}
+#ldr.on{display:flex}
+.lbox{background:#fff;border-radius:18px;padding:30px 36px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.3);max-width:280px;width:90%}
+.spin{width:44px;height:44px;border:4px solid #F3F4F6;border-top-color:var(--or);border-radius:50%;animation:sp .75s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lmsg{font-size:13px;font-weight:700;color:#1B1B1B;margin-bottom:4px}.lsub{font-size:11px;color:#9CA3AF}
+
+/* ── BUYER PERSONA ──────────────────────────────────────────────────── */
+.ch-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px;max-width:620px;margin:24px auto 0}
+.chc{background:#fff;border:2px solid transparent;border-radius:16px;padding:24px;text-align:center;cursor:pointer;transition:all .28s;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.chc:hover,.chc:active{border-color:var(--or);box-shadow:0 12px 30px rgba(255,109,42,.12);transform:translateY(-2px)}
+.chc-ic{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px}
+.chc h3{font-size:16px;font-weight:800;color:#1B1B1B;margin-bottom:5px}
+.chc .sub{font-size:12px;font-weight:700;margin-bottom:7px}
+.chc p{font-size:12px;color:#6B7280;line-height:1.55}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr));gap:14px}
+.pc{background:#fff;border:1px solid #E5E7EB;border-radius:13px;padding:18px;text-align:center;cursor:pointer;transition:all .28s;position:relative}
+.pc:hover,.pc:active{border-color:rgba(255,109,42,.3);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+.pav{width:64px;height:64px;border-radius:50%;margin:0 auto 10px;border:3px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,.1);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#F3F4F6;font-size:26px}
+.pav img{width:100%;height:100%;object-fit:cover}
+.pnm{font-size:14px;font-weight:800;color:#1B1B1B;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.poc{font-size:12px;color:#6B7280;margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pft{border-top:1px solid #F3F4F6;padding-top:9px;margin-top:4px;display:flex;justify-content:space-between;font-size:11px;color:#9CA3AF;font-weight:600}
+.pdel{position:absolute;top:8px;right:8px;width:28px;height:28px;background:#fff;border-radius:50%;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9CA3AF;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.pdel:hover,.pdel:active{background:#FEF2F2;border-color:#FECACA;color:#DC2626}
+
+/* ── EDITOR ─────────────────────────────────────────────────────────── */
+.ew{background:#fff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden}
+.et{background:linear-gradient(to right,#F9FAFB,#fff);padding:16px 20px;border-bottom:1px solid #F3F4F6}
+.et input{font-size:22px;font-weight:900;background:transparent;border:none;border-bottom:2px solid transparent;color:#1B1B1B;width:100%;padding:4px 0;transition:border .2s}
+.et input:focus{border-bottom-color:var(--or);box-shadow:none;outline:none}
+.et p{font-size:11px;color:#9CA3AF;margin-top:5px}
+.eg{display:grid;grid-template-columns:minmax(0,175px) minmax(0,1fr)}
+.ec1{padding:16px;border-right:1px solid #F3F4F6;background:#FAFAFA}
+.ec2{padding:18px 20px}
+.pbox{width:100%;aspect-ratio:1;border-radius:12px;background:#F3F4F6;border:2px dashed #D1D5DB;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:12px}
+.pbox img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.pov{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:8px}
+.pov label{background:#fff;color:#1B1B1B;font-size:11px;font-weight:700;padding:6px 11px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.psb{background:#F5F5F5;border:1px solid #E8E8E8;border-radius:12px;padding:14px}
+.pst{font-size:10px;font-weight:900;color:#1B1B1B;text-transform:uppercase;letter-spacing:.1em;margin-bottom:11px;display:flex;align-items:center;gap:5px}
+.pst::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--or);flex-shrink:0}
+.stitle{font-size:11px;font-weight:900;color:var(--or);text-transform:uppercase;letter-spacing:.08em;border-bottom:2px solid #FFF0E8;padding-bottom:6px;margin-bottom:12px}
+.ai-pan{background:#FFF5F0;border-top:4px solid var(--or);padding:22px}
+.ai-pt{font-size:18px;font-weight:900;color:#1B1B1B;margin-bottom:16px;display:flex;align-items:center;gap:9px}
+.ai-lbl{font-size:10px;font-weight:900;color:var(--or);text-transform:uppercase;letter-spacing:.08em;background:rgba(255,109,42,.1);padding:3px 8px;border-radius:5px;display:inline-block;margin-bottom:7px}
+.ai-ta{width:100%;border:1px solid #FECFB0;border-radius:11px;padding:12px;font-size:13px;color:#374151;background:#fff;resize:none;line-height:1.6;text-align:justify}
+.ai-ta:focus{border-color:var(--or);box-shadow:0 0 0 3px rgba(255,109,42,.1)}
+.abtn{background:linear-gradient(135deg,#2563EB,#4F46E5);color:#fff;padding:11px 20px;border-radius:10px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:7px;box-shadow:0 6px 18px rgba(37,99,235,.25);min-height:44px;transition:all .2s}
+.abtn:disabled{background:#E5E7EB;color:#9CA3AF;cursor:not-allowed;box-shadow:none}
+.miss{background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px}
+.ai-s{background:#fff;border-radius:16px;border:1px solid #E5E7EB;padding:22px;max-width:520px;margin:28px auto 0}
+.ai-info{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;padding:10px 13px;font-size:11px;color:#1D4ED8;line-height:1.55;margin-top:13px}
+
+/* ── ARCHETYPE ──────────────────────────────────────────────────────── */
+.arch-d{font-size:11px;color:#6B7280;font-style:italic;margin-top:5px}
+.arch-c{background:#FFF0E8;border:1px solid #FECFB0;border-radius:10px;padding:11px 14px;margin-top:12px}
+.arch-c p:first-child{font-size:10px;font-weight:900;color:var(--or);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.arch-c p:last-child{font-size:13px;font-weight:800;color:#1B1B1B}
+.dist-b{background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:16px}
+.dist-b h3{font-size:12px;font-weight:800;color:#374151;border-bottom:1px solid #E5E7EB;padding-bottom:8px;margin-bottom:11px}
+.dr{display:flex;align-items:center;gap:10px;margin-bottom:9px}.dr span{font-size:11px;color:#6B7280;flex:1}
+
+/* ── VALUE PROMISE ──────────────────────────────────────────────────── */
+.vp-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px}
+.vps{border-radius:12px;border:1px solid;padding:16px}
+.vps.bl{background:#F0F9FF;border-color:#BAE6FD}.vps.or{background:#FFF7F0;border-color:#FECFB0}
+.vps h3{font-size:14px;font-weight:800;color:#1B1B1B;border-bottom:1px solid;padding-bottom:8px;margin-bottom:12px}
+.vps.bl h3{border-color:#BAE6FD}.vps.or h3{border-color:#FECFB0}
+
+/* ── EXPORT ─────────────────────────────────────────────────────────── */
+.ex-hero{background:linear-gradient(135deg,#1B1B1B,#2a2a2a);padding:44px 24px;text-align:center}
+.ex-hero h2{font-size:22px;font-weight:900;color:#fff;margin-bottom:8px}
+.ex-hero p{font-size:13px;color:#888;max-width:380px;margin:0 auto}
+.exbtn{background:var(--or);color:#fff;padding:13px 28px;border-radius:12px;font-size:15px;font-weight:900;display:inline-flex;align-items:center;gap:9px;box-shadow:0 6px 18px rgba(255,109,42,.25);min-width:220px;justify-content:center;min-height:50px;transition:all .28s}
+.exbtn:hover,.exbtn:active{background:#e05510}.exbtn:disabled{background:#E5E7EB;color:#9CA3AF;cursor:not-allowed;box-shadow:none}.exbtn.ok{background:#16A34A}
+.wb{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:12px 16px;color:#92400E;font-size:12px}
+
+/* ── TOAST ──────────────────────────────────────────────────────────── */
+@keyframes tIn{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── SCROLLBAR ──────────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:99px}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RESPONSIVE — THE FIX
+   The root cause: body{display:flex} kept sidebar visible on mobile.
+   Solution: #app is the flex container. On mobile we switch #app to
+   block, hide #sb completely (not just translate), show #topbar and
+   make #sb a fixed full-height drawer controlled by JS classes.
+   ══════════════════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  /* Kill the flex layout — stack vertically */
+  #app{display:block;height:100dvh;overflow:hidden}
+
+  /* Sidebar becomes a fixed off-screen drawer */
+  #sb{
+    display:flex!important; /* override nothing — keep flex-column */
+    position:fixed;
+    left:0;top:0;bottom:0;
+    height:100dvh;
+    width:min(270px,80vw);
+    z-index:200;
+    transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+  }
+  #sb.open{transform:translateX(0)}
+
+  /* Main fills the whole screen */
+  #main{
+    width:100%;
+    height:100dvh;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Show topbar, hide desktop sidebar "inline" space */
+  #topbar{display:flex}
+
+  /* Page padding accounts for topbar height */
+  .pg{padding:72px 14px 24px}
+
+  /* Content adjustments */
+  .hero{padding:36px 18px 30px;border-radius:16px 16px 0 0}
+  .h-logo{font-size:30px}
+  .db-body{padding:18px 14px}
+  .dc{grid-template-columns:1fr}
+  .eg{grid-template-columns:1fr}
+  .ec1{border-right:none;border-bottom:1px solid #F3F4F6}
+  .pbox{max-width:160px;margin:0 auto 12px}
+  .g2,.g3{grid-template-columns:1fr}
+  .vp-g{grid-template-columns:1fr}
+  .mh h2{font-size:15px}
+  .et input{font-size:18px}
+  .ai-aig{grid-template-columns:1fr!important}
+  .ex-srow{grid-template-columns:repeat(2,1fr)!important}
+}
+@media(max-width:420px){
+  .h-logo{font-size:26px}
+  .h-tag{font-size:14px}
+  .pgrid{grid-template-columns:1fr}
+  .ch-g{grid-template-columns:1fr}
+  .mbox{border-radius:18px 18px 0 0}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <div id="sb">
+    <div class="sb-top">
+      <div class="logo"><span>Simart</span>keting</div>
+      <p class="logo-sub">El estratega eres tú</p>
+      <div id="save-ind" style="display:none;margin-top:8px;font-size:10px;font-weight:700;letter-spacing:.05em;padding:3px 10px;border-radius:99px;text-align:center;transition:all .3s"></div>
+    </div>
+    <nav id="nav"></nav>
+    <div id="sb-foot">
+      <div id="auth-a"></div>
+      <button class="btn-lg btn-cfg" onclick="oCfg()">⚙️ Configurar IA</button>
+      <p class="sb-pw">Powered by Simart</p>
+    </div>
+  </div>
+
+  <!-- MOBILE DRAWER OVERLAY -->
+  <div id="sb-ov" onclick="closeSB()"></div>
+
+  <!-- MOBILE TOPBAR -->
+  <div id="topbar">
+    <div class="tb-logo"><span>Simart</span>keting</div>
+    <button class="tb-btn" onclick="openSB()" aria-label="Abrir menú">☰</button>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="pg" id="pg"></div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- LOADER -->
+<div id="ldr">
+  <div class="lbox">
+    <div class="spin"></div>
+    <p class="lmsg" id="lmsg">Procesando...</p>
+    <p class="lsub">Puede tomar unos segundos</p>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="mroot"></div>
+
+<script type="module">
+/* ══════════════════════════════════════════════════════════════════════
+   FIREBASE SDK
+   ══════════════════════════════════════════════════════════════════════ */
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{
+  getAuth,onAuthStateChanged,signOut,
+  signInWithPopup,signInWithRedirect,getRedirectResult,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,createUserWithEmailAndPassword,
+  sendPasswordResetEmail
+}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{
+  getFirestore,doc,getDoc,setDoc,onSnapshot
+}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+/* ══════════════════════════════════════════════════════════════════════
+   FIREBASE CONFIG — simarketing-app project
+   ══════════════════════════════════════════════════════════════════════ */
+const FB_CFG={
+  apiKey:"AIzaSyAXlWinlAtIu3fgfrmNUJhb6_J5bCTnHdg",
+  authDomain:"simarketing-app.firebaseapp.com",
+  projectId:"simarketing-app",
+  storageBucket:"simarketing-app.firebasestorage.app",
+  messagingSenderId:"1063957268743",
+  appId:"1:1063957268743:web:5aed7a528d605f97825da2"
+};
+const app=initializeApp(FB_CFG);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const gP=new GoogleAuthProvider();
+gP.addScope('profile');
+gP.addScope('email');
+// Force account selection every time so user can pick the right account
+gP.setCustomParameters({prompt:'select_account'});
+
+/* ══════════════════════════════════════════════════════════════════════
+   CONSTANTS
+   ══════════════════════════════════════════════════════════════════════ */
+const ARQUETIPOS=['Creador','Sabio','Explorador','Inocente','Mago','Héroe','Rebelde','Amante','Bufón','Cuidador','HombreCorriente','Gobernante'];
+const AQD={
+  Creador:'Busca innovar y construir herramientas poderosas.',
+  Sabio:'Busca entender el mundo mediante el conocimiento.',
+  Explorador:'Busca experimentar, descubrir y escapar de lo ordinario.',
+  Inocente:'Busca la felicidad y hacer las cosas bien.',
+  Mago:'Busca generar transformaciones y resultados.',
+  Héroe:'Busca superar retos y ayudar a los demás.',
+  Rebelde:'Busca romper las reglas para la liberación.',
+  Amante:'Busca la intimidad, conexión y belleza.',
+  Bufón:'Busca vivir en el momento con diversión.',
+  Cuidador:'Busca proteger y cuidar a los demás.',
+  HombreCorriente:'Busca pertenecer y conectar con todos.',
+  Gobernante:'Busca el control, estabilidad y liderazgo.'
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════════════ */
+const D={
+  mod:'dashboard',user:null,
+  ud:{nombre:'',email:'',empresa:'',cargo:''},
+  bp:[],
+  ba:{dominant:'',secondary:'',p1:'',p2:'',p3:'',sector:''},
+  bk:{fortaleza:'',competencia:'',target:'',insight:'',beneficios:'',valores:'',razones:'',discriminador:'',esencia:''},
+  vp:{customerJobs:'',pains:'',gains:'',painRelievers:'',gainCreators:'',synthesis:''},
+  mp:{brandName:'',goals:[]},
+  bpv:'choice',bpId:null,key:''
+};
+
+/* ══════════════════════════════════════════════════════════════════════
+   FIRESTORE — SAVE (debounced) + REAL-TIME SYNC
+   ══════════════════════════════════════════════════════════════════════ */
+let _st=null,_ow=false,_us=null;
+
+// Save indicator helpers
+function showSaving(){
+  const el=document.getElementById('save-ind');
+  if(!el)return;
+  el.style.display='block';
+  el.style.background='rgba(255,109,42,.15)';
+  el.style.color='#FF6D2A';
+  el.textContent='⏳ Guardando...';
+}
+function showSaved(){
+  const el=document.getElementById('save-ind');
+  if(!el)return;
+  el.style.background='rgba(34,197,94,.15)';
+  el.style.color='#22c55e';
+  el.textContent='✓ Guardado';
+  setTimeout(()=>{el.style.opacity='0';setTimeout(()=>{el.style.display='none';el.style.opacity='1';},500);},2500);
+}
+function showSaveError(){
+  const el=document.getElementById('save-ind');
+  if(!el)return;
+  el.style.background='rgba(239,68,68,.15)';
+  el.style.color='#ef4444';
+  el.textContent='⚠️ Error al guardar';
+}
+
+function save(){
+  try{localStorage.setItem('smt_k',D.key);}catch(e){}
+  if(!D.user)return;
+  _ow=true;
+  showSaving();
+  clearTimeout(_st);
+  _st=setTimeout(async()=>{
+    try{
+      await setDoc(doc(db,'usuarios',D.user.uid),{
+        ud:D.ud,ba:D.ba,bk:D.bk,vp:D.vp,mp:D.mp,bp:D.bp,key:D.key,
+        updatedAt:new Date().toISOString()
+      },{merge:true});
+      showSaved();
+    }catch(err){
+      console.warn('Firestore write:',err);
+      showSaveError();
+      showToast('⚠️ Error guardando. Verifica tu conexión.','warn');
+    }finally{
+      setTimeout(()=>{_ow=false;},300);
+    }
+  },800);
+}
+
+function startSync(uid){
+  if(_us){_us();_us=null;}
+  _us=onSnapshot(doc(db,'usuarios',uid),(snap)=>{
+    if(!snap.exists()||_ow)return;
+    const d=snap.data();
+    if(d.ud)Object.assign(D.ud,d.ud);
+    if(d.ba)Object.assign(D.ba,d.ba);
+    if(d.bk)Object.assign(D.bk,d.bk);
+    if(d.vp)Object.assign(D.vp,d.vp);
+    if(d.mp)Object.assign(D.mp,d.mp);
+    if(d.bp)D.bp=d.bp;
+    if(d.key&&!D.key)D.key=d.key;
+    rMod();
+    showToast('🔄 Datos sincronizados');
+  },err=>console.warn('Snapshot:',err));
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TOAST
+   ══════════════════════════════════════════════════════════════════════ */
+function showToast(msg,type='info'){
+  const o=document.getElementById('_t');if(o)o.remove();
+  const c={info:'background:#1B1B1B;color:#fff',ok:'background:#16A34A;color:#fff',warn:'background:#D97706;color:#fff'};
+  const t=document.createElement('div');t.id='_t';
+  const bot=`max(20px,env(safe-area-inset-bottom,20px))`;
+  t.style.cssText=`position:fixed;bottom:${bot};right:16px;z-index:9999;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.2);${c[type]||c.info};animation:tIn .25s ease;max-width:280px;word-break:break-word`;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .4s';setTimeout(()=>t.remove(),400);},3500);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SPLASH
+   ══════════════════════════════════════════════════════════════════════ */
+document.getElementById('pg').innerHTML=`
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:16px">
+    <div class="spin" style="width:48px;height:48px;border-width:4px"></div>
+    <p style="font-size:14px;color:#888;font-weight:500">Verificando sesión...</p>
+  </div>`;
+
+/* ══════════════════════════════════════════════════════════════════════
+   AUTH — Google redirect result (handles return from redirect flow)
+   ══════════════════════════════════════════════════════════════════════ */
+getRedirectResult(auth)
+  .then(result=>{if(result?.user)cl();})
+  .catch(err=>{
+    if(err.code&&err.code!=='auth/no-current-user'){
+      console.warn('Redirect result error:',err.code);
+    }
+  });
+
+/* ══════════════════════════════════════════════════════════════════════
+   AUTH STATE OBSERVER
+   On first login: creates the user document in Firestore if it doesn't exist.
+   On every login: loads data and starts real-time sync.
+   ══════════════════════════════════════════════════════════════════════ */
+onAuthStateChanged(auth,async fu=>{
+  if(fu){
+    D.user={uid:fu.uid,email:fu.email,displayName:fu.displayName||fu.email.split('@')[0],photoURL:fu.photoURL};
+    // Restore local API key
+    try{const k=localStorage.getItem('smt_k');if(k)D.key=k;}catch(e){}
+    // Load or create Firestore document
+    try{
+      const ref=doc(db,'usuarios',fu.uid);
+      const snap=await getDoc(ref);
+      if(snap.exists()){
+        const d=snap.data();
+        if(d.ud)Object.assign(D.ud,d.ud);
+        if(d.ba)Object.assign(D.ba,d.ba);
+        if(d.bk)Object.assign(D.bk,d.bk);
+        if(d.vp)Object.assign(D.vp,d.vp);
+        if(d.mp)Object.assign(D.mp,d.mp);
+        if(d.bp)D.bp=d.bp;
+        if(d.key&&!D.key)D.key=d.key;
+      }else{
+        // First login — create document
+        await setDoc(ref,{
+          uid:fu.uid,email:fu.email,displayName:D.user.displayName,
+          ud:D.ud,ba:D.ba,bk:D.bk,vp:D.vp,mp:D.mp,bp:D.bp,key:'',
+          createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+        });
+      }
+    }catch(err){console.warn('Firestore init:',err);}
+    startSync(fu.uid);
+  }else{
+    if(_us){_us();_us=null;}
+    D.user=null;
+    Object.assign(D,{
+      ud:{nombre:'',email:'',empresa:'',cargo:''},bp:[],
+      ba:{dominant:'',secondary:'',p1:'',p2:'',p3:'',sector:''},
+      bk:{fortaleza:'',competencia:'',target:'',insight:'',beneficios:'',valores:'',razones:'',discriminador:'',esencia:''},
+      vp:{customerJobs:'',pains:'',gains:'',painRelievers:'',gainCreators:'',synthesis:''},
+      mp:{brandName:'',goals:[]}
+    });
+  }
+  rNav();rMod();
+});
+
+/* ══════════════════════════════════════════════════════════════════════
+   MOBILE SIDEBAR
+   ══════════════════════════════════════════════════════════════════════ */
+function openSB(){
+  document.getElementById('sb').classList.add('open');
+  document.getElementById('sb-ov').classList.add('open');
+}
+function closeSB(){
+  document.getElementById('sb').classList.remove('open');
+  document.getElementById('sb-ov').classList.remove('open');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NAV
+   ══════════════════════════════════════════════════════════════════════ */
+const NAV=[
+  {id:'dashboard',label:'Inicio',ic:'🏠'},
+  {id:'userData',label:'Datos Básicos',ic:'💼'},
+  {id:'buyerPersona',label:'Buyer Personas',ic:'👥'},
+  {id:'archetype',label:'Arquetipo de Marca',ic:'🎯'},
+  {id:'brandKey',label:'Brand Key',ic:'🔑'},
+  {id:'valuePromise',label:'Promesa de Valor',ic:'🛡️'},
+  {id:'marketingPlan',label:'Plan de Marketing',ic:'📊'},
+  {id:'export',label:'Generar Reporte',ic:'📄'}
+];
+
+function rNav(){
+  document.getElementById('nav').innerHTML=NAV.map(n=>`
+    <button class="nb${D.mod===n.id?' on':''}" onclick="go('${n.id}')">
+      <span class="nb-ic">${n.ic}</span><span>${n.label}</span>
+    </button>`).join('');
+  rAuth();
+}
+
+function rAuth(){
+  const a=document.getElementById('auth-a');
+  if(!D.user){
+    a.innerHTML=`<button class="btn-lg btn-login" onclick="oLog()">🔐 Iniciar Sesión</button>`;
+  }else{
+    const av=D.user.photoURL
+      ?`<img src="${D.user.photoURL}" style="width:34px;height:34px;border-radius:50%;object-fit:cover"/>`
+      :`<div class="u-av">${(D.user.displayName||'?')[0].toUpperCase()}</div>`;
+    a.innerHTML=`
+      <div class="u-card">${av}
+        <div style="overflow:hidden;min-width:0">
+          <div class="u-nm">${e(D.user.displayName||'Estratega')}</div>
+          <div class="u-em">${e(D.user.email||'')}</div>
+        </div>
+      </div>
+      <button class="btn-lg btn-logout" onclick="logout()">🚪 Cerrar Sesión</button>`;
+  }
+}
+
+function go(m){D.mod=m;if(m==='buyerPersona')D.bpv='choice';closeSB();rNav();rMod();}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LOADER
+   ══════════════════════════════════════════════════════════════════════ */
+function showL(m='Procesando...'){document.getElementById('ldr').classList.add('on');document.getElementById('lmsg').textContent=m;}
+function hideL(){document.getElementById('ldr').classList.remove('on');}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════════════════ */
+function e(v){return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function cl(){document.getElementById('mroot').innerHTML='';}
+function fl(t){return `<label class="fl">${t}</label>`;}
+function vbTA(b,t){return `<button id="${b}" class="vb ta off" onclick="tv('${b}','${t}',true)">🎙️</button>`;}
+function vbIP(b,t){return `<button id="${b}" class="vb ip off" onclick="tv('${b}','${t}',false)">🎙️</button>`;}
+
+function friendlyErr(err){
+  const m={
+    'auth/user-not-found':'Correo o contraseña incorrectos.',
+    'auth/wrong-password':'Correo o contraseña incorrectos.',
+    'auth/invalid-credential':'Correo o contraseña incorrectos.',
+    'auth/email-already-in-use':'Este correo ya está registrado.',
+    'auth/weak-password':'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email':'El correo no tiene un formato válido.',
+    'auth/too-many-requests':'Demasiados intentos. Espera unos minutos.',
+    'auth/popup-blocked':'El popup fue bloqueado. Intenta con correo y contraseña.',
+    'auth/popup-closed-by-user':'Se cerró la ventana de Google. Inténtalo de nuevo.',
+    'auth/cancelled-popup-request':'Operación cancelada. Inténtalo de nuevo.'
+  };
+  return m[err.code]||err.message||'Error desconocido.';
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   VOICE
+   ══════════════════════════════════════════════════════════════════════ */
+const RC={};
+function tv(bid,tid,isTA){
+  const btn=document.getElementById(bid),tgt=document.getElementById(tid);
+  if(!tgt)return;
+  if(RC[bid]){RC[bid].stop();return;}
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Dictado disponible solo en Chrome/Edge.');return;}
+  const r=new SR();r.lang='es-ES';r.continuous=false;r.interimResults=false;
+  r.onresult=ev=>{const t=ev.results[0][0].transcript;tgt.value=(tgt.value?tgt.value+' ':'')+t;tgt.dispatchEvent(new Event('input'));};
+  r.onerror=r.onend=()=>{if(btn){btn.className=`vb ${isTA?'ta':'ip'} off`;btn.textContent='🎙️';}delete RC[bid];};
+  r.start();RC[bid]=r;
+  if(btn){btn.className=`vb ${isTA?'ta':'ip'} on`;btn.textContent='⏹';}
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   AI
+   ══════════════════════════════════════════════════════════════════════ */
+async function callAI(prompt){
+  if(!D.key)throw new Error('Sin clave API. Ve a ⚙️ Configurar IA.');
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':D.key,'anthropic-version':'2023-06-01'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt+'\n\nResponde ÚNICAMENTE con JSON válido, sin markdown ni texto extra.'}]})
+  });
+  if(!res.ok)throw new Error(`Error API ${res.status}`);
+  const d=await res.json();
+  return JSON.parse((d.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim());
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   AUTH MODALS
+   ══════════════════════════════════════════════════════════════════════ */
+function oLog(){
+  document.getElementById('mroot').innerHTML=`
+  <div class="ov" onclick="if(event.target===this)cl()">
+    <div class="mbox">
+      <div class="mhd">
+        <div class="ml"><span>Simart</span>keting</div>
+        <button class="mx" onclick="cl()">✕</button>
+      </div>
+      <div class="mbd">
+        <p class="mt2">Bienvenido Estratega</p>
+        <p class="ms2">Elige cómo deseas iniciar sesión para guardar tu progreso.</p>
+        <button class="btn-gg" id="bgg" onclick="lgG()">🌐 Continuar con Google</button>
+        <div class="dv"><div class="dv-l"></div><span>o continuar con</span><div class="dv-l"></div></div>
+        <button class="btn-em" onclick="showEF()">✉️ Correo y Contraseña</button>
+        <div id="merr"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function showEF(reg=false){
+  document.getElementById('mroot').innerHTML=`
+  <div class="ov" onclick="if(event.target===this)cl()">
+    <div class="mbox">
+      <div class="mhd"><div class="ml"><span>Simart</span>keting</div><button class="mx" onclick="cl()">✕</button></div>
+      <div class="mbd">
+        <button class="bk" onclick="oLog()">← Volver</button>
+        <p class="mt2" style="font-size:17px;margin-bottom:4px">${reg?'Crear cuenta':'Iniciar sesión'}</p>
+        <p class="ms2">${reg?'Únete y empieza a construir tu estrategia.':'Bienvenido de nuevo, Estratega.'}</p>
+        ${fl('Correo Electrónico')}
+        <input class="fi" id="fem" type="email" placeholder="tu@correo.com" autocomplete="email" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')document.getElementById('fpw').focus()"/>
+        ${fl('Contraseña')}
+        <input class="fi" id="fpw" type="password" placeholder="••••••••" autocomplete="${reg?'new-password':'current-password'}" onkeydown="if(event.key==='Enter')lgE(${reg})"/>
+        ${!reg?`<div style="text-align:right;margin-top:3px"><button class="sw" style="color:var(--or);font-size:12px" onclick="showForgot()">¿Olvidaste tu contraseña?</button></div>`:''}
+        <button class="btn-sb" id="bea" onclick="lgE(${reg})" style="margin-top:${reg?14:6}px">${reg?'🆕 Crear Cuenta':'🔐 Iniciar Sesión'}</button>
+        <div style="text-align:center;margin-top:10px">
+          <button class="sw" onclick="showEF(${!reg})">${reg?'¿Ya tienes cuenta? Inicia sesión':'¿No tienes cuenta? Regístrate gratis'}</button>
+        </div>
+        <div id="merr"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function showForgot(){
+  document.getElementById('mroot').innerHTML=`
+  <div class="ov" onclick="if(event.target===this)cl()">
+    <div class="mbox">
+      <div class="mhd"><div class="ml"><span>Simart</span>keting</div><button class="mx" onclick="cl()">✕</button></div>
+      <div class="mbd">
+        <button class="bk" onclick="showEF()">← Volver al login</button>
+        <p class="mt2" style="font-size:17px;margin-bottom:4px">Recuperar contraseña</p>
+        <p class="ms2">Te enviaremos un enlace para restablecer tu contraseña al instante.</p>
+        ${fl('Tu correo electrónico')}
+        <input class="fi" id="fre" type="email" placeholder="tu@correo.com" autocomplete="email" onkeydown="if(event.key==='Enter')sendReset()"/>
+        <button class="btn-sb" id="breset" onclick="sendReset()" style="margin-top:14px">📧 Enviar enlace de recuperación</button>
+        <div id="merr"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   GOOGLE LOGIN
+   Strategy: Try popup first (fast, better UX on desktop).
+   If popup fails for any reason (blocked, mobile, etc.) fall back to redirect.
+   ══════════════════════════════════════════════════════════════════════ */
+async function lgG(){
+  const btn=document.getElementById('bgg');
+  if(btn){btn.disabled=true;btn.textContent='Conectando...';}
+  try{
+    await signInWithPopup(auth,gP);
+    cl();// success — onAuthStateChanged fires
+  }catch(err){
+    const REDIRECT_CODES=['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request','auth/operation-not-supported-in-this-environment'];
+    if(REDIRECT_CODES.includes(err.code)){
+      // Popup failed → fall back to redirect (mobile/Safari/blocked)
+      try{
+        await signInWithRedirect(auth,gP);
+        // page reloads; getRedirectResult above handles the result
+      }catch(e2){
+        const m=document.getElementById('merr');
+        if(m)m.innerHTML=`<div class="err">${friendlyErr(e2)}</div>`;
+        if(btn){btn.disabled=false;btn.textContent='🌐 Continuar con Google';}
+      }
+    }else{
+      const m=document.getElementById('merr');
+      if(m)m.innerHTML=`<div class="err">${friendlyErr(err)}</div>`;
+      if(btn){btn.disabled=false;btn.textContent='🌐 Continuar con Google';}
+    }
+  }
+}
+
+async function lgE(isReg){
+  const em=document.getElementById('fem')?.value?.trim()||'';
+  const pw=document.getElementById('fpw')?.value||'';
+  const merr=document.getElementById('merr'),btn=document.getElementById('bea');
+  if(!em||!pw){if(merr)merr.innerHTML='<div class="err">Ingresa correo y contraseña.</div>';return;}
+  if(btn){btn.disabled=true;btn.textContent='Procesando...';}
+  try{
+    if(isReg)await createUserWithEmailAndPassword(auth,em,pw);
+    else await signInWithEmailAndPassword(auth,em,pw);
+    cl();
+  }catch(err){
+    if(merr)merr.innerHTML=`<div class="err">${friendlyErr(err)}</div>`;
+    if(btn){btn.disabled=false;btn.textContent=isReg?'🆕 Crear Cuenta':'🔐 Iniciar Sesión';}
+  }
+}
+
+async function sendReset(){
+  const em=document.getElementById('fre')?.value?.trim()||'';
+  const merr=document.getElementById('merr'),btn=document.getElementById('breset');
+  if(!em){if(merr)merr.innerHTML='<div class="err">Ingresa tu correo.</div>';return;}
+  if(btn){btn.disabled=true;btn.textContent='Enviando...';}
+  try{
+    await sendPasswordResetEmail(auth,em);
+    if(merr)merr.innerHTML=`<div class="ok-m">✅ <strong>Correo enviado.</strong> Revisa tu bandeja de entrada.</div>`;
+    if(btn)btn.style.display='none';
+  }catch(err){
+    if(merr)merr.innerHTML=`<div class="err">${friendlyErr(err)}</div>`;
+    if(btn){btn.disabled=false;btn.textContent='📧 Enviar enlace de recuperación';}
+  }
+}
+
+async function logout(){await signOut(auth);}
+
+function oCfg(){
+  document.getElementById('mroot').innerHTML=`
+  <div class="ov" onclick="if(event.target===this)cl()">
+    <div class="mbox">
+      <div class="mhd"><div class="ml" style="font-size:17px">⚙️ Configurar IA</div><button class="mx" onclick="cl()">✕</button></div>
+      <div class="mbd">
+        <div class="info-b" style="margin-bottom:14px">
+          Esta plataforma usa la <strong>API de Claude (Anthropic)</strong> como motor IA.<br/>
+          Obtén tu clave en <strong>console.anthropic.com</strong> → API Keys
+        </div>
+        ${fl('API Key de Anthropic')}
+        <input class="fi" id="akey" type="password" placeholder="sk-ant-..." value="${e(D.key)}" style="font-family:monospace;font-size:13px"/>
+        <div style="display:flex;gap:10px;margin-top:12px">
+          <button class="bs" style="flex:1;justify-content:center" onclick="cl()">Cancelar</button>
+          <button class="bp" style="flex:1;justify-content:center" onclick="sCfg()">💾 Guardar</button>
+        </div>
+        <p style="font-size:10px;color:#9CA3AF;text-align:center;margin-top:10px">La clave se guarda en tu cuenta y en este navegador.</p>
+      </div>
+    </div>
+  </div>`;
+}
+function sCfg(){D.key=document.getElementById('akey')?.value||'';save();cl();showToast('✅ Clave guardada','ok');}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MODULES
+   ══════════════════════════════════════════════════════════════════════ */
+function rDashboard(){
+  const u=D.user;
+  return `<div style="background:#fff;border-radius:20px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+  <div class="hero">
+    <div class="h-logo"><span>Simart</span>keting</div>
+    <div class="h-div"></div>
+    <p class="h-tag">El estratega eres <b>tú</b>, la potencia es la <b>IA</b>.</p>
+    <p class="h-sub">No le dejes el futuro de tu negocio a un algoritmo. Domina el marketing estratégico con el poder de la IA entrenada por expertos en marketing.</p>
+    ${!u
+      ?`<button class="h-btn" onclick="oLog()">🔐 Iniciar sesión para comenzar</button>`
+      :`<div class="h-wlc">¡Bienvenido, <span>${e(u.displayName||u.email?.split('@')[0]||'Estratega')}</span>!</div>`}
+  </div>
+  <div class="db-body">
+    <div class="dc">
+      <div class="dci"><div class="dc-ic" style="background:#FFF0E8">🎯</div><h3>Toma el control</h3><p>Define tu estrategia con criterio humano; no permitas que la IA decida por ti, <b>deja que trabaje para ti.</b></p></div>
+      <div class="dci"><div class="dc-ic" style="background:#EFF6FF">✨</div><h3>Inteligencia a tu servicio</h3><p>Gracias a la integración con <b style="color:#3B82F6">IA</b>, entender qué pasos dar para tener éxito es más fácil, rápido y preciso.</p></div>
+    </div>
+    <div class="df">
+      <div style="font-size:28px;margin-bottom:12px;position:relative;z-index:1">📈</div>
+      <h3>De la teoría a la <span>acción</span></h3>
+      <p>Diseñada para emprendedores y Pymes, <b>Simartketing</b> transforma la complejidad digital en una hoja de ruta clara y accionable.</p>
+    </div>
+    <div class="dcta">
+      <div style="font-size:30px;margin-bottom:9px">🗺️</div>
+      <h4>Empieza hoy a construir una marca con propósito</h4>
+      <p>Tú pones la meta, <span>Simartketing</span> te da el mapa.</p>
+    </div>
+  </div></div>`;
+}
+
+function rUserData(){
+  const u=D.ud;
+  return `<div class="mc"><div class="mh"><h2>💼 Datos del Proyecto</h2><p>Configura la información básica de la empresa y el responsable.</p></div><div class="mb"><div class="g2">
+  ${[['nombre','Nombre Completo','Juan Pérez','👤'],['email','Correo Electrónico','juan@empresa.com','✉️'],['empresa','Empresa / Marca','Simart Corp','🏢'],['cargo','Cargo','Director de Marketing','💼']].map(([k,l,ph,ic])=>`<div>${fl(l)}<div style="position:relative"><span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">${ic}</span><input class="fi" style="padding-left:36px" value="${e(u[k])}" placeholder="${ph}" autocomplete="off" oninput="D.ud['${k}']=this.value;save()"/></div></div>`).join('')}
+  </div></div></div>`;
+}
+
+function rArchetype(){
+  const a=D.ba;
+  return `<div class="mc"><div class="mh"><h2>🎯 Arquetipo de Marca</h2><p>Define la personalidad y comportamiento de tu marca en el entorno digital.</p></div><div class="mb"><div class="g2">
+  <div style="display:flex;flex-direction:column;gap:14px">
+    ${['dominant','secondary'].map((k,i)=>`<div>${fl(i===0?'Arquetipo Dominante':'Arquetipo Secundario')}<select class="fi" onchange="D.ba['${k}']=this.value;save();rMod()"><option value="">Selecciona uno...</option>${ARQUETIPOS.map(ar=>`<option value="${ar}"${a[k]===ar?' selected':''}>${ar}</option>`).join('')}</select>${a[k]?`<p class="arch-d">${AQD[a[k]]||''}</p>`:''}</div>`).join('')}
+    <div>${fl('Sector / Industria')}<input class="fi" value="${e(a.sector)}" placeholder="Ej: Tecnología B2B" oninput="D.ba.sector=this.value;save()"/></div>
+    ${(a.dominant||a.secondary)?`<div class="arch-c"><p>Combinación Activa</p><p>${[a.dominant,a.secondary].filter(Boolean).join(' + ')}</p></div>`:''}
+  </div>
+  <div class="dist-b"><h3>Distribución de Personalidad (%)</h3>
+    ${[['p1','Dominante (P1)','70%'],['p2','Secundario (P2)','20%'],['p3','Terciario (P3)','10%']].map(([k,l,ph])=>`<div class="dr"><span>${l}</span><input class="fi" style="width:80px;text-align:center;font-size:14px" value="${e(a[k])}" placeholder="${ph}" oninput="D.ba['${k}']=this.value;save()"/></div>`).join('')}
+  </div></div></div></div>`;
+}
+
+function rBrandKey(){
+  const bk=D.bk;
+  const flds=[['fortaleza','Centro de Fortaleza','¿De dónde venimos? Nuestro origen y base fundacional.'],['competencia','Entorno Competitivo','¿Quiénes son nuestros competidores principales?'],['target','Público Objetivo','¿A quién nos dirigimos?'],['insight','Insight del Consumidor','¿Cuál es la verdad profunda que resolvemos?'],['beneficios','Beneficios Funcionales y Emocionales','¿Qué gana el cliente al elegirnos?'],['valores','Valores y Creencias','¿En qué creemos ciegamente?'],['razones','Razones para Creer','¿Por qué pueden confiar en nosotros?'],['discriminador','Discriminador','La principal diferencia contra la competencia.'],['esencia','Esencia de Marca','La idea central en 2 o 3 palabras.']];
+  return `<div class="mc"><div class="mh"><h2>🔑 Brand Key</h2><p>Estructura el ADN y el posicionamiento de tu marca.</p></div><div class="mb"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:16px">
+  ${flds.map(([k,l,ph],i)=>`<div>${fl(l)}<div class="rel"><textarea class="fi" id="bk-${k}" rows="3" placeholder="${ph}" oninput="D.bk['${k}']=this.value;save()">${e(bk[k])}</textarea>${vbTA(`vbk${i}`,`bk-${k}`)}</div></div>`).join('')}
+  </div></div></div>`;
+}
+
+function rValuePromise(){
+  const vp=D.vp;
+  const blk=arr=>arr.map(([k,l,ph])=>`<div style="margin-bottom:12px">${fl(l)}<div class="rel"><textarea class="fi" id="vp-${k}" rows="3" placeholder="${ph}" oninput="D.vp['${k}']=this.value;save()">${e(vp[k])}</textarea>${vbTA(`vvp-${k}`,`vp-${k}`)}</div></div>`).join('');
+  return `<div class="mc"><div class="mh"><h2>🛡️ Promesa de Valor</h2><p>Conecta el perfil del cliente con el valor de tu producto o servicio.</p></div><div class="mb"><div class="vp-g">
+  <div class="vps bl"><h3>Perfil del Cliente</h3>${blk([['customerJobs','Trabajos del Cliente','¿Qué intenta resolver el cliente?'],['pains','Dolores (Pains)','¿Qué le molesta o frustra?'],['gains','Ganancias (Gains)','¿Qué beneficios espera obtener?']])}</div>
+  <div class="vps or"><h3>Mapa de Valor</h3>${blk([['painRelievers','Aliviadores de Dolor','¿Cómo reduces las frustraciones?'],['gainCreators','Creadores de Ganancias','¿Cómo maximizas los beneficios?'],['synthesis','Síntesis de Promesa','Ayudamos a [Cliente] a [Resolver] mediante [Solución] para [Beneficio].']])}</div>
+  </div></div></div>`;
+}
+
+function rMarketingPlan(){
+  const mp=D.mp;
+  return `<div class="mc"><div class="mh"><h2>📊 Plan de Marketing</h2><p>Establece los objetivos estratégicos de marketing de la marca.</p></div><div class="mb" style="display:flex;flex-direction:column;gap:18px">
+  <div>${fl('Nombre Comercial de la Marca')}<input class="fi" style="max-width:400px" value="${e(mp.brandName)}" placeholder="Nombre de la campaña o marca" oninput="D.mp.brandName=this.value;save()"/></div>
+  <div>${fl('Objetivos de Marketing (SMART)')}<div style="display:flex;gap:10px;flex-wrap:wrap"><input class="fi" id="gi" placeholder="Ej: Aumentar leads calificados en un 20% en 3 meses" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')aGoal()"/><button class="bp" onclick="aGoal()">+ Agregar</button></div></div>
+  ${mp.goals.length?`<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:16px"><p style="font-size:12px;font-weight:800;color:#374151;margin-bottom:11px">Objetivos (${mp.goals.length})</p><div style="display:flex;flex-direction:column;gap:8px">${mp.goals.map((g,i)=>`<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E5E7EB;border-radius:9px;padding:10px 13px"><div style="width:22px;height:22px;background:#FFF0E8;color:var(--or);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0">${i+1}</div><span style="flex:1;font-size:13px;color:#374151">${e(g)}</span><button style="background:none;border:none;color:#D1D5DB;cursor:pointer;font-size:18px;padding:4px 8px;min-height:36px" onclick="dGoal(${i})">✕</button></div>`).join('')}</div></div>`:''}
+  </div></div>`;
+}
+function aGoal(){const i=document.getElementById('gi');if(!i||!i.value.trim())return;D.mp.goals.push(i.value.trim());i.value='';save();rMod();}
+function dGoal(i){D.mp.goals.splice(i,1);save();rMod();}
+
+function rExport(){
+  const v=!!D.ud.empresa;
+  return `<div class="mc"><div class="ex-hero"><div style="font-size:42px;margin-bottom:12px">📄</div><h2>Generación de Reporte Estratégico</h2><p>Consolida toda la información de los módulos y descarga tu resumen estratégico completo.</p></div><div class="mb" style="text-align:center;padding:26px">
+  ${!v?`<div class="wb">⚠️ <strong>Advertencia:</strong> Debes ingresar el Nombre de la Empresa en Datos Básicos.</div>`:`<div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+  <div class="ex-srow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:440px">
+    ${[['👥',`${D.bp.length} Buyer Personas`],['🎯',D.ba.dominant||'Arquetipo'],['🛡️',D.vp.synthesis?'Promesa ✅':'Sin síntesis'],['📊',`${D.mp.goals.length} Objetivos`]].map(([ic,lb])=>`<div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:12px;text-align:center"><div style="font-size:18px;margin-bottom:4px">${ic}</div><div style="font-size:11px;font-weight:700;color:#374151">${lb}</div></div>`).join('')}
+  </div>
+  <button class="exbtn" id="exbtn" onclick="doEx()">⬇️ Descargar Reporte Estratégico</button>
+  <p style="font-size:11px;color:#9CA3AF">Se descarga como archivo .txt</p>
+  </div>`}
+  </div></div>`;
+}
+function doEx(){
+  const btn=document.getElementById('exbtn');if(btn){btn.disabled=true;btn.textContent='⏳ Generando...';}
+  setTimeout(()=>{
+    try{
+      const u=D.ud,bp=D.bp,mp=D.mp,ba=D.ba,bk=D.bk,vp=D.vp;
+      const L=['════════════════════════════════════','   REPORTE ESTRATÉGICO DIGITAL - Simartketing','════════════════════════════════════','',`EMPRESA: ${u.empresa||'N/A'}`,`Responsable: ${u.nombre||'N/A'} · ${u.cargo||'N/A'}`,`Email: ${u.email||'N/A'}`,'','── ARQUETIPO ──',`Dominante: ${ba.dominant||'N/A'} (${ba.p1||''}%)`,`Secundario: ${ba.secondary||'N/A'} (${ba.p2||''}%)`,`Sector: ${ba.sector||'N/A'}`,'','── BRAND KEY ──',...Object.entries(bk).map(([k,v])=>v?`${k}: ${v}`:'').filter(Boolean),'','── PROMESA DE VALOR ──',`Síntesis: ${vp.synthesis||'N/A'}`,'','── PLAN DE MARKETING ──',`Marca: ${mp.brandName||'N/A'}`,...mp.goals.map((g,i)=>`${i+1}. ${g}`),'',`── BUYER PERSONAS (${bp.length}) ──`,...bp.map((p,i)=>[`${i+1}. ${p.nombreAvatar||'Sin nombre'}`,`   ${p.ocupacion||'N/A'} · ${p.edad||'N/A'} · ${p.ubicacion||'N/A'}`,`   "${p.cita||'N/A'}"`,p.aiAnalysis?`   [IA] ${p.aiAnalysis.descripcion?.slice(0,150)}...`:'']).flat().filter(Boolean),'','════════════════════════════════════',`Generado: ${new Date().toLocaleDateString('es-CO')}`,'www.simart.com.co'];
+      const blob=new Blob([L.join('\n')],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`Reporte_Simartketing_${u.empresa.replace(/\s+/g,'_')}.txt`;a.click();URL.revokeObjectURL(url);
+      if(btn){btn.disabled=false;btn.className='exbtn ok';btn.textContent='✅ ¡Descargado!';setTimeout(()=>{btn.className='exbtn';btn.textContent='⬇️ Descargar Reporte Estratégico';},3000);}
+    }catch(ex){if(btn){btn.disabled=false;btn.textContent='⬇️ Descargar Reporte Estratégico';}}
+  },300);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BUYER PERSONA
+   ══════════════════════════════════════════════════════════════════════ */
+function rBuyerPersona(){switch(D.bpv){case 'ai-setup':return rBPAI();case 'list':return rBPL();case 'edit':return rBPE();default:return rBPC();}}
+
+function rBPC(){
+  return `<div>
+  <div style="text-align:center;max-width:600px;margin:32px auto 0">
+    <h2 style="font-size:22px;font-weight:900;color:#1B1B1B;margin-bottom:9px">Buyer Personas</h2>
+    <p style="font-size:13px;color:#6B7280;line-height:1.6">Define a tu cliente ideal para conectar estratégicamente con su mente y corazón.</p>
+  </div>
+  <div class="ch-g" style="margin-top:28px">
+    <div class="chc" onclick="cManual()">
+      <div class="chc-ic" style="background:#EFF6FF">&#128100;</div>
+      <h3>Crearlo Manualmente</h3>
+      <p class="sub" style="color:#3B82F6">Recomendado — mayor precisión estratégica.</p>
+      <p>Construye el perfil con tu propio conocimiento del mercado para mayor precisión y conexión con tu realidad.</p>
+    </div>
+    <div class="chc" onclick="bpAIWarning()">
+      <div class="chc-ic" style="background:#FFF0E8">&#129302;</div>
+      <h3>Crearlo con IA</h3>
+      <p class="sub" style="color:var(--or)">Punto de partida — valida siempre con datos reales.</p>
+      <p>La IA investiga el mercado y genera un perfil base. Deberás validar y ajustar los datos con el factor humano.</p>
+    </div>
+  </div>
+  ${D.bp.length ? `<div style="text-align:center;margin-top:24px">
+    <button class="bs" onclick="D.bpv='list';rMod()">Ver Dashboard de Buyer Personas (${D.bp.length})</button>
+  </div>` : ''}
+  </div>`;
+}
+
+function bpAIWarning(){
+  document.getElementById('mroot').innerHTML=`
+  <div class="ov" onclick="if(event.target===this)cl()">
+    <div class="mbox">
+      <div class="mhd"><div class="ml">Aviso importante</div><button class="mx" onclick="cl()">X</button></div>
+      <div class="mbd">
+        <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:18px 20px;margin-bottom:20px">
+          <p style="font-size:14px;font-weight:700;color:#92400E;margin-bottom:10px;line-height:1.5">Crear tu Buyer Persona unicamente con IA podria poner en riesgo tu estrategia digital</p>
+          <p style="font-size:13px;color:#78350F;line-height:1.7;text-align:justify">Obtendras perfiles genericos y carentes de emociones reales, lo que resultara en campanas vacias y desperdicio de presupuesto. Usa la tecnologia solo como punto de partida y valida siempre los datos con el factor humano para conectar de verdad.</p>
+        </div>
+        <div style="display:flex;gap:10px;flex-direction:column">
+          <button class="btn-sb" onclick="cl();D.bpv='ai-setup';rMod()">Entendido, quiero continuar con IA</button>
+          <button class="bs" style="justify-content:center" onclick="cl();cManual()">Prefiero crearlo manualmente</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function cManual(){
+  const p={id:Date.now().toString(),isAI:false,nombreAvatar:'',rangoEdad:'',genero:'',
+    ubicacion:'',ocupacion:'',cita:'',metas:'',dolores:'',valores:'',miedos:'',
+    redesSociales:'',keywords:'',formatoContenido:'',competencia:'',arquetipoRelacionado:'',imageUrl:''};
+  D.bp.unshift(p);D.bpId=p.id;D.bpv='edit';save();rMod();
+}
+
+function rBPAI(){
+  return `<div class="ai-s" style="max-width:600px">
+  <button class="bk" onclick="D.bpv='choice';rMod()">Volver</button>
+  <h2 style="font-size:19px;font-weight:900;color:#1B1B1B;margin-bottom:5px">Crear Buyer Persona con IA</h2>
+  <p style="font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.6">Responde estas tres preguntas con precision. La IA investigara el ecosistema digital para construir el perfil.</p>
+
+  <div style="margin-bottom:16px">
+    ${fl('Sector al que pertenece tu empresa')}
+    <input class="fi" id="ais" placeholder="Ej: Salud y bienestar, Tecnologia B2B, Gastronomia..."/>
+  </div>
+
+  <div style="margin-bottom:16px">
+    ${fl('Descripcion de tu producto o servicio')}
+    <p style="font-size:11px;color:#9CA3AF;margin-bottom:6px">Define un solo producto o servicio. No combines varios en la misma descripcion.</p>
+    <textarea class="fi" id="aip" rows="3" placeholder="Ej: Plataforma de automatizacion de marketing para pequenas empresas de retail."></textarea>
+  </div>
+
+  <div style="margin-bottom:20px">
+    ${fl('Descripcion del cliente que quieres atraer')}
+    <p style="font-size:11px;color:#9CA3AF;margin-bottom:6px">Se especifico. Ejemplo: Personas que quieren X para lograr Y.</p>
+    <textarea class="fi" id="aid" rows="3" placeholder="Ej: Personas que quieren digitalizar su negocio para aumentar ventas sin depender de intermediarios."></textarea>
+  </div>
+
+  <button class="bp" style="width:100%;justify-content:center;padding:13px;font-size:14px;min-height:50px" onclick="cAI()">Generar Buyer Persona con IA</button>
+  <div class="ai-info" style="margin-top:14px">Requiere clave API configurada en el menu lateral. La IA investigara en Internet para construir el perfil.</div>
+  </div>`;
+}
+
+
+async function cAI(){
+  const s=document.getElementById('ais')?.value?.trim()||'';
+  const p=document.getElementById('aip')?.value?.trim()||'';
+  const d=document.getElementById('aid')?.value?.trim()||'';
+  if(!s||!p||!d){alert('Por favor completa los 3 campos.');return;}
+  showL('Investigando el ecosistema digital y creando el perfil...');
+  try{
+    const data=await callAI('Eres estratega de marketing digital experto. Investiga en el ecosistema digital y crea un Buyer Persona detallado. Sector: '+s+'. Producto/Servicio: '+p+'. Cliente objetivo: '+d+'. Devuelve JSON con claves: nombreAvatar (nombre y apellido real), rangoEdad (ej: 28-38 anos), genero (Masculino/Femenino), ubicacion, ocupacion, cita (frase literal del perfil sobre su mayor frustracion o deseo), metas (parrafo), dolores (parrafo), valores (parrafo), miedos (parrafo), redesSociales (parrafo), keywords (parrafo), formatoContenido (parrafo), competencia (marcas reales), arquetipoRelacionado. Sin asteriscos. Sin frases genericas de IA. Texto justificado y natural.');
+    const np={id:Date.now().toString(),isAI:true,
+      nombreAvatar:data.nombreAvatar||'Perfil IA',
+      rangoEdad:data.rangoEdad||'',genero:data.genero||'',
+      ubicacion:data.ubicacion||'',ocupacion:data.ocupacion||'',
+      cita:data.cita||'',metas:data.metas||'',dolores:data.dolores||'',
+      valores:data.valores||'',miedos:data.miedos||'',
+      redesSociales:data.redesSociales||'',keywords:data.keywords||'',
+      formatoContenido:data.formatoContenido||'',competencia:data.competencia||'',
+      arquetipoRelacionado:data.arquetipoRelacionado||'',imageUrl:''};
+    D.bp.unshift(np);D.bpId=np.id;D.bpv='edit';save();
+  }catch(ex){alert(ex.message||'Error generando con IA.');}
+  hideL();rMod();
+}
+
+function rBPL(){
+  return `<div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h2 style="font-size:20px;font-weight:900;color:#1B1B1B">Dashboard de Buyer Personas</h2>
+      <p style="font-size:12px;color:#6B7280;margin-top:3px">Todos los perfiles creados para tu estrategia digital.</p>
+    </div>
+    <button class="bd" onclick="D.bpv='choice';rMod()">+ Crear Nuevo Perfil</button>
+  </div>
+  ${D.bp.length
+    ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:18px">
+        ${D.bp.map(p => {
+          const descriptor = p.aiAnalysis && p.aiAnalysis.descriptor ? p.aiAnalysis.descriptor : '';
+          const displayName = descriptor ? e(p.nombreAvatar||'Sin nombre') + ' \u2014 ' + e(descriptor) : e(p.nombreAvatar||'Sin nombre');
+          const tagStyle = p.isAI
+            ? 'background:#FFF0E8;color:#FF6D2A'
+            : 'background:#EFF6FF;color:#3B82F6';
+          const tagText = p.isAI ? 'Creado con IA' : 'Creado manualmente';
+          return `<div style="background:#fff;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05)">
+            <div style="display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid #F3F4F6">
+              <div style="width:56px;height:56px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#F3F4F6;display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+                ${p.imageUrl ? '<img src="'+p.imageUrl+'" style="width:100%;height:100%;object-fit:cover"/>' : '&#128100;'}
+              </div>
+              <div style="min-width:0;flex:1">
+                <p style="font-size:14px;font-weight:800;color:#1B1B1B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</p>
+                <p style="font-size:11px;color:#6B7280;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e(p.ocupacion||'Sin ocupacion')}${p.rangoEdad?' &middot; '+e(p.rangoEdad):''}</p>
+                <span style="display:inline-block;margin-top:5px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:99px;${tagStyle}">${tagText}</span>
+              </div>
+            </div>
+            <div style="padding:12px 16px;background:#FAFAFA;border-bottom:1px solid #F3F4F6">
+              <p style="font-size:10px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Insight del perfil</p>
+              <p style="font-size:12px;color:#374151;line-height:1.55;text-align:justify;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${e(p.cita||'Sin insight registrado.')}</p>
+            </div>
+            <div style="display:flex;border-top:1px solid #F3F4F6">
+              <button onclick="eBP('${p.id}')" style="flex:1;padding:10px 8px;font-size:12px;font-weight:700;color:#374151;background:none;border:none;border-right:1px solid #F3F4F6;cursor:pointer" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='none'">Editar</button>
+              <button onclick="dlBPpdf('${p.id}')" style="flex:1;padding:10px 8px;font-size:12px;font-weight:700;color:#2563EB;background:none;border:none;border-right:1px solid #F3F4F6;cursor:pointer" onmouseover="this.style.background='#EFF6FF'" onmouseout="this.style.background='none'">Descargar</button>
+              <button onclick="dBP('${p.id}')" style="flex:1;padding:10px 8px;font-size:12px;font-weight:700;color:#DC2626;background:none;border:none;cursor:pointer" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">Eliminar</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`
+    : `<div style="text-align:center;padding:56px 20px;background:#fff;border-radius:14px;border:2px dashed #E5E7EB;color:#9CA3AF">
+        <p style="font-size:15px;font-weight:700;margin-bottom:8px">No tienes ningun Buyer Persona creado</p>
+        <p style="font-size:13px">Haz clic en "Crear Nuevo Perfil" para comenzar.</p>
+      </div>`}
+  </div>`;
+}
+function eBP(id){D.bpId=id;D.bpv='edit';rMod();}
+function dBP(id){if(!confirm('¿Eliminar este Buyer Persona?'))return;D.bp=D.bp.filter(p=>p.id!==id);save();D.bpv=D.bp.length?'list':'choice';rMod();}
+function uBP(id,k,v){const p=D.bp.find(x=>x.id===id);if(p){p[k]=v;save();}}
+function uBPA(id,k,v){const p=D.bp.find(x=>x.id===id);if(p&&p.aiAnalysis){p.aiAnalysis[k]=v;save();}}
+function upImg(id,inp){const f=inp.files?.[0];if(!f)return;const r=new FileReader();r.onloadend=()=>{uBP(id,'imageUrl',r.result);rMod();};r.readAsDataURL(f);}
+function isCmp(p){return['nombreAvatar','rangoEdad','ubicacion','ocupacion','cita','metas','dolores','valores','miedos','redesSociales','keywords','formatoContenido','competencia'].every(k=>p[k]?.trim());}
+
+
+async function anlz(id){
+  const p=D.bp.find(x=>x.id===id);if(!p)return;
+  showL('Realizando analisis profundo del perfil...');
+  try{
+    const info='PERFIL: nombre='+p.nombreAvatar+', rangoEdad='+p.rangoEdad+', genero='+p.genero+', ubicacion='+p.ubicacion+', ocupacion='+p.ocupacion+', cita='+p.cita+', metas='+p.metas+', dolores='+p.dolores+', valores='+p.valores+', miedos='+p.miedos+', redesSociales='+p.redesSociales+', keywords='+p.keywords+', formatoContenido='+p.formatoContenido+', competencia='+p.competencia;
+    const res=await callAI('Eres estratega de marketing digital experto. Analiza en profundidad este Buyer Persona y genera un analisis estrategico completo. '+info+'. Devuelve JSON con claves (sin asteriscos, sin frases como siguiente nivel, texto justificado, parrafos naturales, sin viñetas): descriptor (1-4 palabras que lo identifiquen de forma unica como ser humano, ej: el explorador digital), descripcion (parrafo completo que condense quien es: Nombre + descriptor, ubicacion, ocupacion, rango de edad, metas, dolores, valores, miedos, redes), tonoVoz (parrafo que describa como debe comunicarse la marca: vocabulario, tono emocional, ritmo, tipo de mensaje, sin bullets), analisisCompetencia (para cada marca en competencia: arquetipo, comportamiento, estilo de comunicacion, contenidos que crea, vacio estrategico. Parrafos por marca), pilaresContenido (exactamente 3 pilares estrategicos. Cada uno con titulo corto y explicacion de 3+ oraciones. Separados por doble salto de linea. Sin numeracion), ideasContenido (exactamente 20 ideas de contenido numeradas del 1 al 20. Cada una explicada en 2-3 oraciones. Basadas en engagement de competencia y psicografia del buyer. Separadas por doble salto de linea. Prohibido usar siguiente nivel).');
+    p.aiAnalysis=res;save();
+  }catch(ex){alert(ex.message||'Error en el analisis con IA.');}
+  hideL();rMod();
+}
+
+function dlBPpdf(id){
+  const p=D.bp.find(x=>x.id===id);
+  if(!p){alert('Perfil no encontrado.');return;}
+  if(!p.aiAnalysis){alert('Primero realiza el Analisis Profundo con IA para generar el perfil completo.');return;}
+  const descriptor=p.aiAnalysis.descriptor||'';
+  const displayName=descriptor?p.nombreAvatar+' — '+descriptor:p.nombreAvatar;
+  const sep='════════════════════════════════════════════════════════';
+  const L=[
+    sep,
+    'BUYER PERSONA: '+displayName.toUpperCase(),sep,'',
+    'PERFIL DEMOGRAFICO',
+    '──────────────────────────────────────────────────────',
+    'Nombre: '+(p.nombreAvatar||'N/A'),
+    'Rango de edad: '+(p.rangoEdad||'N/A'),
+    'Genero: '+(p.genero||'N/A'),
+    'Ubicacion: '+(p.ubicacion||'N/A'),
+    'Ocupacion: '+(p.ocupacion||'N/A'),'',
+    'INSIGHT CRITICO',
+    '──────────────────────────────────────────────────────',
+    (p.cita||'N/A'),'',
+    'METAS Y OBJETIVOS','──────────────────────────────────────────────────────',
+    (p.metas||'N/A'),'',
+    'DOLORES PROFUNDOS','──────────────────────────────────────────────────────',
+    (p.dolores||'N/A'),'',
+    'VALORES DE VIDA','──────────────────────────────────────────────────────',
+    (p.valores||'N/A'),'',
+    'MIEDOS DE COMPRA','──────────────────────────────────────────────────────',
+    (p.miedos||'N/A'),'',
+    'ECOSISTEMA DIGITAL','──────────────────────────────────────────────────────',
+    'Redes Sociales: '+(p.redesSociales||'N/A'),
+    'Keywords: '+(p.keywords||'N/A'),
+    'Formato preferido: '+(p.formatoContenido||'N/A'),
+    'Marcas que consume: '+(p.competencia||'N/A'),'',
+    sep,'ANALISIS ESTRATEGICO DE IA',sep,'',
+    'DESCRIPCION DEL PERFIL','──────────────────────────────────────────────────────',
+    (p.aiAnalysis.descripcion||''),'',
+    'TONO DE VOZ RECOMENDADO','──────────────────────────────────────────────────────',
+    (p.aiAnalysis.tonoVoz||''),'',
+    'ANALISIS DE LA COMPETENCIA','──────────────────────────────────────────────────────',
+    (p.aiAnalysis.analisisCompetencia||''),'',
+    'PILARES DE CONTENIDO','──────────────────────────────────────────────────────',
+    (p.aiAnalysis.pilaresContenido||''),'',
+    '20 IDEAS DE CONTENIDO PARA REDES','──────────────────────────────────────────────────────',
+    (p.aiAnalysis.ideasContenido||''),'',
+    sep,
+    'Generado: '+new Date().toLocaleDateString('es-CO'),
+    'www.simart.com.co'
+  ];
+  const blob=new Blob([L.join('\n')],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='BuyerPersona_'+(p.nombreAvatar||'perfil').replace(/\s+/g,'_')+'.txt';
+  a.click();URL.revokeObjectURL(url);
+  showToast('Perfil descargado correctamente','ok');
+}
+
+function rBPE(){
+  const p=D.bp.find(x=>x.id===D.bpId);if(!p)return rBPC();
+  const cmp=isCmp(p);
+  const descriptor=p.aiAnalysis&&p.aiAnalysis.descriptor?p.aiAnalysis.descriptor:'';
+  const btnStyle=cmp
+    ?'background:linear-gradient(135deg,#2563EB,#4F46E5);color:#fff;box-shadow:0 6px 18px rgba(37,99,235,.25);cursor:pointer'
+    :'background:#E5E7EB;color:#9CA3AF;cursor:not-allowed';
+  const rangoOpts=['18-24 anos','25-30 anos','31-38 anos','39-45 anos','46-55 anos','56+ anos'];
+  return `<div style="display:flex;flex-direction:column;gap:14px;padding-bottom:40px">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <button class="bs" onclick="D.bpv='list';rMod()">Volver al Dashboard</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="font-size:10px;font-weight:800;text-transform:uppercase;padding:3px 10px;border-radius:99px;${p.isAI?'background:#FFF0E8;color:#FF6D2A':'background:#EFF6FF;color:#3B82F6'}">${p.isAI?'Creado con IA':'Creado manualmente'}</span>
+      ${p.aiAnalysis?`<button onclick="dlBPpdf('${p.id}')" style="background:#2563EB;color:#fff;border:none;padding:9px 18px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;min-height:38px">Descargar Perfil</button>`:''}
+      <button class="bs" style="color:#DC2626;border:1px solid #FECACA;font-size:12px;padding:9px 14px" onclick="dBP('${p.id}')">Eliminar</button>
+    </div>
+  </div>
+
+  <div style="background:#fff;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden">
+    <div style="background:linear-gradient(to right,#F9FAFB,#fff);padding:18px 22px;border-bottom:1px solid #F3F4F6">
+      <label style="display:block;font-size:11px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Nombre del Buyer Persona</label>
+      <input value="${e(p.nombreAvatar)}"
+        placeholder="Escribe aqui el nombre del perfil — Ej: Laura Martinez"
+        style="font-size:22px;font-weight:900;background:transparent;border:none;border-bottom:2px solid transparent;color:#1B1B1B;width:100%;padding:4px 0;transition:border .2s;outline:none"
+        onfocus="this.style.borderBottomColor='#FF6D2A'"
+        onblur="this.style.borderBottomColor='transparent'"
+        oninput="uBP('${p.id}','nombreAvatar',this.value)"/>
+      ${descriptor?`<p style="font-size:13px;color:#FF6D2A;font-weight:700;margin-top:4px">${e(descriptor)}</p>`:''}
+      <p style="font-size:11px;color:#9CA3AF;margin-top:5px">Los cambios se guardan automaticamente.</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr)">
+      <div style="padding:16px;border-right:1px solid #F3F4F6;background:#FAFAFA">
+        <div style="width:100%;aspect-ratio:1;border-radius:12px;background:#F3F4F6;border:2px dashed #D1D5DB;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:12px">
+          ${p.imageUrl?`<img src="${p.imageUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`:`<div style="font-size:32px;margin-bottom:5px">&#128247;</div><p style="font-size:11px;color:#9CA3AF;text-align:center">Foto del perfil</p>`}
+          <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:8px">
+            <label style="background:#fff;color:#1B1B1B;font-size:11px;font-weight:700;padding:6px 11px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:5px">
+              Subir foto<input type="file" accept="image/*" style="display:none" onchange="upImg('${p.id}',this)"/>
+            </label>
+          </div>
+        </div>
+        <div style="background:#F5F5F5;border:1px solid #E8E8E8;border-radius:12px;padding:14px">
+          <p style="font-size:10px;font-weight:900;color:#1B1B1B;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:5px">
+            <span style="width:7px;height:7px;border-radius:50%;background:#FF6D2A;display:inline-block"></span>
+            Perfil Demografico
+          </p>
+          <div style="margin-bottom:9px">
+            <label class="fl">Rango de Edad</label>
+            <select class="fi" onchange="uBP('${p.id}','rangoEdad',this.value)">
+              <option value="">Selecciona...</option>
+              ${rangoOpts.map(r=>`<option value="${r}" ${p.rangoEdad===r?'selected':''}>${r}</option>`).join('')}
+            </select>
+          </div>
+          <div style="margin-bottom:9px">
+            <label class="fl">Genero</label>
+            <select class="fi" onchange="uBP('${p.id}','genero',this.value)">
+              <option value="">Selecciona...</option>
+              ${['Masculino','Femenino','No binario','Prefiere no indicar'].map(g=>`<option value="${g}" ${p.genero===g?'selected':''}>${g}</option>`).join('')}
+            </select>
+          </div>
+          <div style="margin-bottom:9px">
+            <label class="fl">Ubicacion</label>
+            <input class="fi" value="${e(p.ubicacion||'')}" placeholder="Ciudad, Pais" oninput="uBP('${p.id}','ubicacion',this.value)"/>
+          </div>
+          <div>
+            <label class="fl">Ocupacion</label>
+            <input class="fi" value="${e(p.ocupacion||'')}" placeholder="Cargo o profesion" oninput="uBP('${p.id}','ocupacion',this.value)"/>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:18px 22px">
+        <div style="margin-bottom:16px">
+          <label class="fl">Insight Critico — Motivacion Principal (frase literal que diria este perfil)</label>
+          <div class="rel">
+            <input class="fi" id="bpe-cita"
+              style="font-style:italic;padding-right:42px;background:#FFFAF7;border-color:#FECFB0;text-align:justify"
+              value="${e(p.cita||'')}"
+              placeholder="Ej: Quiero hacer crecer mi negocio pero siento que el marketing digital es demasiado complejo."
+              oninput="uBP('${p.id}','cita',this.value)"/>
+            ${vbIP('vcita','bpe-cita')}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:18px;margin-bottom:16px">
+          <div>
+            <p style="font-size:11px;font-weight:900;color:#FF6D2A;text-transform:uppercase;letter-spacing:.08em;border-bottom:2px solid #FFF0E8;padding-bottom:6px;margin-bottom:12px">Psicografia</p>
+            ${[['metas','Metas y Objetivos','Que quiere lograr en su vida y negocio?'],
+               ['dolores','Dolores Profundos','Que le frustra, preocupa o quita el sueno?']].map(([k,l,ph])=>`
+            <div style="margin-bottom:12px">
+              <label class="fl">${l}</label>
+              <div class="rel">
+                <textarea class="fi" id="bpe-${k}" rows="3" placeholder="${ph}"
+                  style="text-align:justify"
+                  oninput="uBP('${p.id}','${k}',this.value)">${e(p[k]||'')}</textarea>
+                ${vbTA(`v${k}`,`bpe-${k}`)}
+              </div>
+            </div>`).join('')}
+          </div>
+          <div>
+            <p style="font-size:11px;font-weight:900;color:#FF6D2A;text-transform:uppercase;letter-spacing:.08em;border-bottom:2px solid #FFF0E8;padding-bottom:6px;margin-bottom:12px">Comportamiento</p>
+            <div style="margin-bottom:12px">
+              <label class="fl">Valores de Vida</label>
+              <div class="rel">
+                <textarea class="fi" id="bpe-valores" rows="3" placeholder="Que principios guian sus decisiones?"
+                  style="text-align:justify"
+                  oninput="uBP('${p.id}','valores',this.value)">${e(p.valores||'')}</textarea>
+                ${vbTA('vvalores','bpe-valores')}
+              </div>
+            </div>
+            <div>
+              <label class="fl">Miedos de Compra</label>
+              <div class="rel">
+                <textarea class="fi" id="bpe-miedos" rows="2" placeholder="Que le impide comprar o tomar decisiones?"
+                  style="text-align:justify"
+                  oninput="uBP('${p.id}','miedos',this.value)">${e(p.miedos||'')}</textarea>
+                ${vbTA('vmiedos','bpe-miedos')}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:16px;margin-bottom:16px">
+          <p style="font-size:11px;font-weight:900;color:#374151;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Ecosistema Digital</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px">
+            ${[['redesSociales','Redes Sociales','En que redes esta y como las usa?'],
+               ['keywords','Keywords de Busqueda','Terminos que busca para resolver sus problemas'],
+               ['formatoContenido','Formato de Contenido Preferido','Videos, articulos, podcasts, carruseles...'],
+               ['competencia','Marcas que Consume','Marcas y referentes que sigue y admira']].map(([k,l,ph])=>`
+            <div>
+              <label class="fl">${l}</label>
+              <textarea class="fi" rows="3" placeholder="${ph}"
+                style="text-align:justify"
+                oninput="uBP('${p.id}','${k}',this.value)">${e(p[k]||'')}</textarea>
+            </div>`).join('')}
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-top:14px;border-top:1px solid #F3F4F6;flex-wrap:wrap">
+          ${!cmp?`<span style="background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px">Completa todos los campos para activar el analisis</span>`:''}
+          <button
+            style="padding:11px 22px;border-radius:10px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:8px;min-height:44px;border:none;transition:all .2s;${btnStyle}"
+            ${!cmp?'disabled':''}
+            onclick="anlz('${p.id}')">
+            Analisis Profundo con IA
+          </button>
+        </div>
+      </div>
+    </div>
+
+    ${p.aiAnalysis?`
+    <div style="background:#FFF5F0;border-top:4px solid #FF6D2A;padding:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px">
+        <p style="font-size:18px;font-weight:900;color:#1B1B1B">Analisis Estrategico <span style="font-size:13px;font-weight:500;color:#6B7280">(editable)</span></p>
+        <button onclick="dlBPpdf('${p.id}')" style="background:#2563EB;color:#fff;border:none;padding:10px 20px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer">Descargar Perfil Completo</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin-bottom:16px">
+        ${[['descripcion','Descripcion del Perfil'],['tonoVoz','Tono de Voz Recomendado']].map(([k,l])=>`
+        <div>
+          <p style="font-size:10px;font-weight:900;color:#FF6D2A;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,109,42,.1);padding:3px 8px;border-radius:5px;display:inline-block;margin-bottom:8px">${l}</p>
+          <textarea
+            style="width:100%;border:1px solid #FECFB0;border-radius:11px;padding:14px;font-size:13px;color:#374151;background:#fff;resize:none;line-height:1.7;text-align:justify;min-height:160px"
+            oninput="uBPA('${p.id}','${k}',this.value)">${e(p.aiAnalysis[k]||'')}</textarea>
+        </div>`).join('')}
+      </div>
+
+      <div style="margin-bottom:16px">
+        <p style="font-size:10px;font-weight:900;color:#FF6D2A;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,109,42,.1);padding:3px 8px;border-radius:5px;display:inline-block;margin-bottom:8px">Analisis de la Competencia</p>
+        <textarea
+          style="width:100%;border:1px solid #FECFB0;border-radius:11px;padding:14px;font-size:13px;color:#374151;background:#fff;resize:none;line-height:1.7;text-align:justify;min-height:140px"
+          oninput="uBPA('${p.id}','analisisCompetencia',this.value)">${e(p.aiAnalysis.analisisCompetencia||'')}</textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">
+        <div>
+          <p style="font-size:10px;font-weight:900;color:#FF6D2A;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,109,42,.1);padding:3px 8px;border-radius:5px;display:inline-block;margin-bottom:8px">Pilares de Contenido</p>
+          <textarea
+            style="width:100%;border:1px solid #FECFB0;border-radius:11px;padding:14px;font-size:13px;color:#374151;background:#fff;resize:none;line-height:1.7;text-align:justify;white-space:pre-wrap;min-height:320px"
+            oninput="uBPA('${p.id}','pilaresContenido',this.value)">${e(p.aiAnalysis.pilaresContenido||'')}</textarea>
+        </div>
+        <div>
+          <p style="font-size:10px;font-weight:900;color:#FF6D2A;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,109,42,.1);padding:3px 8px;border-radius:5px;display:inline-block;margin-bottom:8px">20 Ideas de Contenido para Redes</p>
+          <textarea
+            style="width:100%;border:1px solid #FECFB0;border-radius:11px;padding:14px;font-size:13px;color:#374151;background:#fff;resize:none;line-height:1.7;text-align:justify;white-space:pre-wrap;min-height:320px"
+            oninput="uBPA('${p.id}','ideasContenido',this.value)">${e(p.aiAnalysis.ideasContenido||'')}</textarea>
+        </div>
+      </div>
+    </div>`:''}
+  </div>
+  </div>`;
+}
+
+function rMod(){
+  const MAP={
+    dashboard:rDashboard,userData:rUserData,buyerPersona:rBuyerPersona,
+    archetype:rArchetype,brandKey:rBrandKey,valuePromise:rValuePromise,
+    marketingPlan:rMarketingPlan,export:rExport
+  };
+  document.getElementById('pg').innerHTML=(MAP[D.mod]||rDashboard)();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   EXPOSE TO WINDOW
+   (required because script type="module" has its own scope)
+   ══════════════════════════════════════════════════════════════════════ */
+Object.assign(window,{
+  go,oLog,showEF,showForgot,sendReset,lgG,lgE,logout,oCfg,sCfg,cl,
+  aGoal,dGoal,doEx,openSB,closeSB,
+  cManual,cAI,eBP,dBP,uBP,uBPA,upImg,anlz,dlBPpdf,bpAIWarning,
+  rNav,rAuth,rMod,tv,showL,hideL,showToast
+});
+</script>
+</body>
+</html>
