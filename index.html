@@ -198,7 +198,7 @@ select.fi{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
 .abtn{background:linear-gradient(135deg,#2563EB,#4F46E5);color:#fff;padding:11px 20px;border-radius:10px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:7px;box-shadow:0 6px 18px rgba(37,99,235,.25);min-height:44px;transition:all .2s}
 .abtn:disabled{background:#E5E7EB;color:#9CA3AF;cursor:not-allowed;box-shadow:none}
 .miss{background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px}
-.ai-s{background:#fff;border-radius:16px;border:1px solid #E5E7EB;padding:22px;max-width:520px;margin:28px auto 0}
+.ai-s{background:#fff;border-radius:16px;border:1px solid #E5E7EB;padding:22px;max-width:520px;margin:28px auto 0;width:100%}
 .ai-info{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;padding:10px 13px;font-size:11px;color:#1D4ED8;line-height:1.55;margin-top:13px}
 
 /* ── ARCHETYPE ──────────────────────────────────────────────────────── */
@@ -239,6 +239,9 @@ select.fi{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
    make #sb a fixed full-height drawer controlled by JS classes.
    ══════════════════════════════════════════════════════════════════════ */
 @media(max-width:768px){
+  .bp-editor-grid{grid-template-columns:1fr!important}
+  .bp-editor-grid>div:first-child{border-right:none!important;border-bottom:0.5px solid #F3F4F6}
+  .ai-s{padding:16px!important;margin-top:0!important}
   /* Kill the flex layout — stack vertically */
   #app{display:block;height:100dvh;overflow:hidden}
 
@@ -306,7 +309,7 @@ select.fi{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
     <nav id="nav"></nav>
     <div id="sb-foot">
       <div id="auth-a"></div>
-      <button class="btn-lg btn-cfg" onclick="oCfg()">⚙️ Configurar IA</button>
+      <div id="cfg-btn-area"></div>
       <p class="sb-pw">Powered by Simart</p>
     </div>
   </div>
@@ -597,6 +600,9 @@ function rAuth(){
   const a=document.getElementById('auth-a');
   if(!D.user){
     a.innerHTML=`<button class="btn-lg btn-login" onclick="oLog()">🔐 Iniciar Sesión</button>`;
+    // Hide cfg button when not logged in
+    const cfgArea=document.getElementById('cfg-btn-area');
+    if(cfgArea)cfgArea.innerHTML='';
   }else{
     const av=D.user.photoURL
       ?`<img src="${D.user.photoURL}" style="width:34px;height:34px;border-radius:50%;object-fit:cover"/>`
@@ -609,6 +615,14 @@ function rAuth(){
         </div>
       </div>
       <button class="btn-lg btn-logout" onclick="logout()">🚪 Cerrar Sesión</button>`;
+    // Show "Configurar IA" ONLY for the app owner
+    const cfgArea=document.getElementById('cfg-btn-area');
+    if(cfgArea){
+      const isOwner=D.user.email==='simart.col@gmail.com';
+      cfgArea.innerHTML=isOwner
+        ?`<button class="btn-lg btn-cfg" onclick="oCfg()">⚙️ Configurar IA</button>`
+        :'';
+    }
   }
 }
 
@@ -666,7 +680,12 @@ function tv(bid,tid,isTA){
    AI
    ══════════════════════════════════════════════════════════════════════ */
 async function callAI(prompt){
-  if(!D.key)throw new Error('Sin clave API. Ve a ⚙️ Configurar IA.');
+  if(!D.key){
+    // Show friendly API key prompt for non-admin users
+    const k=prompt('Para usar la IA necesitas una clave API de Anthropic.\nObtén la tuya gratis en console.anthropic.com → API Keys\n\nPega tu clave aquí:');
+    if(!k||!k.trim()){throw new Error('Se necesita una clave API para continuar.');}
+    D.key=k.trim();save();
+  }
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':D.key,'anthropic-version':'2023-06-01'},
@@ -976,8 +995,8 @@ function bpAIWarning(){
           <p style="font-size:13px;color:#78350F;line-height:1.7;text-align:justify">Obtendras perfiles genericos y carentes de emociones reales, lo que resultara en campanas vacias y desperdicio de presupuesto. Usa la tecnologia solo como punto de partida y valida siempre los datos con el factor humano para conectar de verdad.</p>
         </div>
         <div style="display:flex;gap:10px;flex-direction:column">
-          <button class="btn-sb" onclick="cl();D.bpv='ai-setup';rMod()">Entendido, quiero continuar con IA</button>
-          <button class="bs" style="justify-content:center" onclick="cl();cManual()">Prefiero crearlo manualmente</button>
+          <button class="btn-sb" onclick="D.bpv='ai-setup';cl();setTimeout(rMod,50)">Entendido, quiero continuar con IA</button>
+          <button class="bs" style="justify-content:center" onclick="D.bpv='choice';cl();cManual()">Prefiero crearlo manualmente</button>
         </div>
       </div>
     </div>
@@ -992,7 +1011,7 @@ function cManual(){
 }
 
 function rBPAI(){
-  return `<div class="ai-s" style="max-width:600px">
+  return `<div class="ai-s" style="max-width:600px;margin:0 auto">
   <button class="bk" onclick="D.bpv='choice';rMod()">Volver</button>
   <h2 style="font-size:19px;font-weight:900;color:#1B1B1B;margin-bottom:5px">Crear Buyer Persona con IA</h2>
   <p style="font-size:13px;color:#6B7280;margin-bottom:20px;line-height:1.6">Responde estas tres preguntas con precision. La IA investigara el ecosistema digital para construir el perfil.</p>
@@ -1091,7 +1110,24 @@ function rBPL(){
 }
 function eBP(id){D.bpId=id;D.bpv='edit';rMod();}
 function dBP(id){if(!confirm('¿Eliminar este Buyer Persona?'))return;D.bp=D.bp.filter(p=>p.id!==id);save();D.bpv=D.bp.length?'list':'choice';rMod();}
-function uBP(id,k,v){const p=D.bp.find(x=>x.id===id);if(p){p[k]=v;save();}}
+function uBP(id,k,v){
+  const p=D.bp.find(x=>x.id===id);
+  if(!p)return;
+  p[k]=v;
+  save();
+  // Live-update the analyze button state without full re-render
+  const cmp=isCmp(p);
+  const btn=document.getElementById('anlz-btn-'+id);
+  const msg=document.getElementById('anlz-msg-'+id);
+  if(btn){
+    btn.disabled=!cmp;
+    btn.style.background=cmp?'linear-gradient(135deg,#2563EB,#4F46E5)':'#E5E7EB';
+    btn.style.color=cmp?'#fff':'#9CA3AF';
+    btn.style.boxShadow=cmp?'0 6px 18px rgba(37,99,235,.25)':'none';
+    btn.style.cursor=cmp?'pointer':'not-allowed';
+  }
+  if(msg){msg.style.display=cmp?'none':'inline-block';}
+}
 function uBPA(id,k,v){const p=D.bp.find(x=>x.id===id);if(p&&p.aiAnalysis){p.aiAnalysis[k]=v;save();}}
 function upImg(id,inp){const f=inp.files?.[0];if(!f)return;const r=new FileReader();r.onloadend=()=>{uBP(id,'imageUrl',r.result);rMod();};r.readAsDataURL(f);}
 function isCmp(p){return['nombreAvatar','rangoEdad','ubicacion','ocupacion','cita','metas','dolores','valores','miedos','redesSociales','keywords','formatoContenido','competencia'].every(k=>p[k]?.trim());}
@@ -1196,7 +1232,7 @@ function rBPE(){
       <p style="font-size:11px;color:#9CA3AF;margin-top:5px">Los cambios se guardan automaticamente.</p>
     </div>
 
-    <div style="display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr)">
+    <div style="display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr)" class="bp-editor-grid">
       <div style="padding:16px;border-right:1px solid #F3F4F6;background:#FAFAFA">
         <div style="width:100%;aspect-ratio:1;border-radius:12px;background:#F3F4F6;border:2px dashed #D1D5DB;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;margin-bottom:12px">
           ${p.imageUrl?`<img src="${p.imageUrl}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0"/>`:`<div style="font-size:32px;margin-bottom:5px">&#128247;</div><p style="font-size:11px;color:#9CA3AF;text-align:center">Foto del perfil</p>`}
@@ -1304,8 +1340,8 @@ function rBPE(){
         </div>
 
         <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding-top:14px;border-top:1px solid #F3F4F6;flex-wrap:wrap">
-          ${!cmp?`<span style="background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px">Completa todos los campos para activar el analisis</span>`:''}
-          <button
+          ${!cmp?`<span id="anlz-msg-${p.id}" style="background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:5px 10px;border-radius:7px">Completa todos los campos para activar el analisis</span>`:''}
+          <button id="anlz-btn-${p.id}"
             style="padding:11px 22px;border-radius:10px;font-weight:800;font-size:13px;display:inline-flex;align-items:center;gap:8px;min-height:44px;border:none;transition:all .2s;${btnStyle}"
             ${!cmp?'disabled':''}
             onclick="anlz('${p.id}')">
@@ -1365,6 +1401,9 @@ function rMod(){
     marketingPlan:rMarketingPlan,export:rExport
   };
   document.getElementById('pg').innerHTML=(MAP[D.mod]||rDashboard)();
+  // Always scroll to top on module change (critical for mobile UX)
+  const main=document.getElementById('main');
+  if(main)main.scrollTop=0;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
