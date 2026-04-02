@@ -94,8 +94,8 @@ select.fi{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
 .badge-m{background:#EFF6FF;color:#3B82F6;font-size:10px;font-weight:800;text-transform:uppercase;padding:3px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:4px}
 
 /* ── MODALS (bottom-sheet) ──────────────────────────────────────────── */
-.ov{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
-.mbox{background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:480px;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.3);animation:msl .22s ease;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.mbox{background:#fff;border-radius:20px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.35);animation:msl .22s ease;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
 @keyframes msl{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
 .mhd{background:#1B1B1B;padding:28px 24px 22px;text-align:center;position:relative;overflow:hidden}
 .mhd::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:var(--or);border-radius:50%;filter:blur(30px);opacity:.2}
@@ -241,7 +241,8 @@ select.fi{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.or
 @media(max-width:768px){
   .bp-editor-grid{grid-template-columns:1fr!important}
   .bp-editor-grid>div:first-child{border-right:none!important;border-bottom:0.5px solid #F3F4F6}
-  .ai-s{padding:16px!important;margin-top:0!important}
+  .ai-s{padding:16px!important;margin-top:0!important;max-width:100%!important}
+  .mbox{border-radius:20px!important}
   /* Kill the flex layout — stack vertically */
   #app{display:block;height:100dvh;overflow:hidden}
 
@@ -679,17 +680,17 @@ function tv(bid,tid,isTA){
 /* ══════════════════════════════════════════════════════════════════════
    AI
    ══════════════════════════════════════════════════════════════════════ */
-async function callAI(prompt){
+async function callAI(msg){
   if(!D.key){
     // Show friendly API key prompt for non-admin users
-    const k=prompt('Para usar la IA necesitas una clave API de Anthropic.\nObtén la tuya gratis en console.anthropic.com → API Keys\n\nPega tu clave aquí:');
+    const k=window.prompt('Para usar la IA necesitas una clave API de Anthropic.\nObtén la tuya gratis en console.anthropic.com → API Keys\n\nPega tu clave aquí:');
     if(!k||!k.trim()){throw new Error('Se necesita una clave API para continuar.');}
     D.key=k.trim();save();
   }
   const res=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':D.key,'anthropic-version':'2023-06-01'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:prompt+'\n\nResponde ÚNICAMENTE con JSON válido, sin markdown ni texto extra.'}]})
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,messages:[{role:'user',content:msg+'\n\nResponde ÚNICAMENTE con JSON válido, sin markdown ni texto extra.'}]})
   });
   if(!res.ok)throw new Error(`Error API ${res.status}`);
   const d=await res.json();
@@ -995,7 +996,7 @@ function bpAIWarning(){
           <p style="font-size:13px;color:#78350F;line-height:1.7;text-align:justify">Obtendras perfiles genericos y carentes de emociones reales, lo que resultara en campanas vacias y desperdicio de presupuesto. Usa la tecnologia solo como punto de partida y valida siempre los datos con el factor humano para conectar de verdad.</p>
         </div>
         <div style="display:flex;gap:10px;flex-direction:column">
-          <button class="btn-sb" onclick="D.bpv='ai-setup';cl();setTimeout(rMod,50)">Entendido, quiero continuar con IA</button>
+          <button class="btn-sb" onclick="D.bpv='ai-setup';cl();setTimeout(function(){rMod();document.getElementById('main').scrollTop=0;},80)">Entendido, quiero continuar con IA</button>
           <button class="bs" style="justify-content:center" onclick="D.bpv='choice';cl();cManual()">Prefiero crearlo manualmente</button>
         </div>
       </div>
@@ -1211,7 +1212,7 @@ function rBPE(){
   const rangoOpts=['18-24 anos','25-30 anos','31-38 anos','39-45 anos','46-55 anos','56+ anos'];
   return `<div style="display:flex;flex-direction:column;gap:14px;padding-bottom:40px">
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <button class="bs" onclick="D.bpv='list';rMod()">Volver al Dashboard</button>
+    <button class="bs" onclick="D.bpv=D.bp.filter(x=>x.nombreAvatar).length?'list':'choice';rMod()">Volver al Dashboard</button>
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span style="font-size:10px;font-weight:800;text-transform:uppercase;padding:3px 10px;border-radius:99px;${p.isAI?'background:#FFF0E8;color:#FF6D2A':'background:#EFF6FF;color:#3B82F6'}">${p.isAI?'Creado con IA':'Creado manualmente'}</span>
       ${p.aiAnalysis?`<button onclick="dlBPpdf('${p.id}')" style="background:#2563EB;color:#fff;border:none;padding:9px 18px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;min-height:38px">Descargar Perfil</button>`:''}
